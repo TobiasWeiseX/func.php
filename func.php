@@ -72,16 +72,13 @@ namespace F{
     function equal($a, $b){ return $a === $b; }
     function unEqual($a, $b){ return $a !== $b; }
     function isNull($x){ return is_null($x); }
-    
 
     function toJSON($x){
         if(L\isGen($x)) $x = toArray($x);
         return json_encode($x, JSON_PRETTY_PRINT);
     }
 
-    function echoJSON($x){
-        echo toJSON($x);
-    }
+    function echoJSON($x){ echo toJSON($x); }
     
     #todo: coroutine
     function execTime($f, $args){
@@ -153,14 +150,10 @@ namespace F{
             else $this->set->detach($x);
             return $this;
         }
-        public function size(){
-            return count($this->array) + $this->set->count();
-        }
+        public function size(){ return count($this->array) + $this->set->count(); }
     }
 
-    function Set(){
-        return (new SimpleSet());
-    }
+    function Set(){ return (new SimpleSet()); }
     
     #todo: constructor args : dict
     #todo: json-compatible
@@ -190,17 +183,12 @@ namespace F{
             if(gettype($x)==="string") return isset($this->array[$x]);
             else return isset($this->map[$x]);        
         }
-        public function size(){
-            return count($this->array) + $this->map->count();
-        }
+        public function size(){ return count($this->array) + $this->map->count(); }
     }    
-    
-    function Map(){
-        #func_args
-        return (new SimpleMap());
-    }
 
-    
+    #todo: func_args    
+    function Map(){ return (new SimpleMap()); }
+
 }
 
 //=============
@@ -538,7 +526,7 @@ namespace F\list_{
             yield $x;
         }    
     }
-  
+
     function concat($ls){
         foreach($ls as $xs){ 
             foreach($xs as $x){
@@ -868,7 +856,6 @@ namespace F\io\file{
         }
         return true;
     }
-
 }
 
 namespace F\io\dir{
@@ -897,8 +884,6 @@ namespace F\io\dir{
         return true;
     }
 
-    
-    
     function preg_ls ($path=".", $rec=false, $pat="/.*/") {
         $pat = preg_replace("|(/.*/[^S]*)|s", "\\1S", $pat);
         while(substr($path,-1,1)=="/"){
@@ -927,12 +912,9 @@ namespace F\io\path{
     error_reporting(-1);
     #error_reporting(E_STRICT);
 
-
     use F\list_ as L;
 
-    function ext($path){
-        return strtolower(L\last(explode(".", $path)));
-    }
+    function ext($path){ return strtolower(L\last(explode(".", $path))); }
 
 }
 
@@ -947,11 +929,8 @@ namespace F\mysql{
     #echo __FILE__;
     #@register_shutdown_function(mysql_close);
 
-    function query($con, $sql){
-        return mysqli_query($con, $sql);
-    }
+    function query($con, $sql){ return mysqli_query($con, $sql); }
 
-    
     #todo: error handling
     function connect($host, $user, $pwd, $db){
         $con = mysqli_connect($host, $user, $pwd, $db);
@@ -967,15 +946,12 @@ namespace F\mysql{
 namespace F\mysql\types{
     error_reporting(-1);
     #error_reporting(E_STRICT);
-
 }
 
 namespace F\mysql\table{
     error_reporting(-1);
     #error_reporting(E_STRICT);
 
-    
-    
     use F\mysql as M;
     use F\list_ as L;
     use F\dict as D;
@@ -1025,9 +1001,7 @@ namespace F\mysql\table{
         return M\query($con, "INSERT INTO ".$tableName."(".$fields.") VALUES (".$values.")");
     }
 
-    function drop($con, $name){
-        return M\query($con, "DROP TABLE ".$name.";");
-    }
+    function drop($con, $name){ return M\query($con, "DROP TABLE ".$name.";"); }
 
 
 
