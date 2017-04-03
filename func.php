@@ -84,10 +84,17 @@ namespace F{
     }        
     #}    
     
+    #__FILE__ – The full path and filename of the file.
+    #__DIR__ – The directory of the file.
+    #__CLASS__ – The class name.
+    #__METHOD__ – The class method name.
+    #__LINE__ – The current line number of the file.
+    #
+    #__FUNCTION__ – The function name.
+    #__NAMESPACE__ – The name of the current namespace
+
     
-    
-    
-    
+
     #polymorphic funcs?
     function equal($a, $b){ return $a === $b; }
     function unEqual($a, $b){ return $a !== $b; }
@@ -102,18 +109,13 @@ namespace F{
     
     #todo: coroutine
     function execTime($f, $args){
-        $start = microtime(true);
+        $t1 = microtime(true);
         $r = call_user_func_array($f, $args);
-        $end = microtime(true);
-        return [$r, $end-$start];
+        $t2 = microtime(true);
+        return [$r, $t2-$t1];
     }
 
-    #$o1 = new stdClass;
-    #$o1->foo = 'bar';
-
-
     /*
-    
     public function __call($method, $arguments) {
         $arguments = array_merge(array("stdObject" => $this), $arguments); // Note: method argument 0 will always referred to the main class ($this).
         if (isset($this->{$method}) && is_callable($this->{$method})) {
@@ -122,7 +124,6 @@ namespace F{
             throw new Exception("Fatal error: Call to undefined method stdObject::{$method}()");
         }
     }
-    
     */
 
     
@@ -131,14 +132,18 @@ namespace F{
     #memory_get_usage()
     #is_array
 
+
     
     #mimic JS-obj literals!
-    #function createObj(){
-
-    #}
-    
     #ArrayWrapperClass -> as Map keys / Set values!
-    
+    function newObj($d){
+        $obj = new stdClass;
+        foreach($d as $k => $v){
+            $obj->{$k} = $v;
+        }
+        return $obj;
+    }
+
     
     #todo: constructor args : list
     #non-Object types?
