@@ -125,7 +125,7 @@ namespace F{
     #todo: json-compatible
     class SimpleSet{
         private $set;
-        private $array; #for all the string keys.. that r not objs in php xD ö.ö
+        private $array; #for all the string keys.. that r not objs in php xD ï¿½.ï¿½
 
         public function __construct(){
             $this->set = new \SplObjectStorage();
@@ -159,7 +159,7 @@ namespace F{
     #todo: json-compatible
     class SimpleMap{
         private $map;
-        private $array; #for all the string keys.. that r not objs in php xD ö.ö
+        private $array; #for all the string keys.. that r not objs in php xD ï¿½.ï¿½
         
         public function __construct(){
             $this->map = new \SplObjectStorage();
@@ -1030,10 +1030,11 @@ namespace F\mysql\table\select{
         }
     }
 
-    #todo: rewrite no foreach, S\concat
+    #todo: 1 array for all the join rules instead of tableName+joins
     function select($con, $tableName, $joins, $fields, $condition){
         #JOIN film_actor ON (film.film_id = film_actor.film_id)
         # tname => "cond"
+        #todo: rewrite no foreach, S\concat
         $s = "";
         foreach($joins as $tName => $cond){
             $s .= " JOIN ".$tName." ON (".$cond.") ";
@@ -1179,6 +1180,7 @@ namespace F\prog{
     }
 
     //rename to json microservice?
+    #todo: failcase -> one fails al fail or ignore defect json?
     function microService($f){
         $rs = [];
         foreach($_POST as $k => $v){
