@@ -259,7 +259,6 @@ namespace F\func{
     #error_reporting(E_STRICT);
     use F\list_ as L;
 
-
     function iden($x){ return $x; }
     function left($a, $b){ return $a; }
     function right($a, $b){ return $b; }
@@ -277,8 +276,7 @@ namespace F\func{
             return false;
         }
         #return $f instanceof Generator;
-    }    
-    
+    }
     
     #todo: create comp
     function compose(&$f, &$g){
@@ -287,20 +285,41 @@ namespace F\func{
         };
     }
 
-    #function fix($f, ...$args){
-    #    return function(...$args2) use(&$f, &$args){
-    #        return $f(...$args, ...$args2);
-    #    };
-    #}
-   
-    function fix(){
-        list($f, $args) = func_get_args();
-        return function() use(&$f, &$args){
-            #todo: concat arrays
-            return call_user_func_array($f, L\concat2($args, func_get_args()));
+    #doesnt work:
+    #$f = F\func\variadicOp("F\number\add", "F\func\iden");
+    #echo $f(1,2,3);
+
+    function variadicOp($op, $flatten){
+        return function() use (&$op, &$flatten) {
+            $args = func_get_args();
+            return $flatten(L\reduce($op, $args));
         };
     }
 
+    function comp(){
+        $fs = func_get_args();
+        $f = L\reduce(__NAMESPACE__."\compose", $fs);
+        return $f;
+    }
+
+    #if(version_compare(PHP_VERSION, '5.6.0', '>=')){
+    #    function fix($f, ...$args){
+    #        return function(...$args2) use(&$f, &$args){
+    #            return $f(...$args, ...$args2);
+    #        };
+    #    }        
+    #}
+    #else{
+
+    function fix(){
+        list($f, $args) = func_get_args();
+        if(is_string($f)) $f = str_replace("\t","\\t", str_replace("\n", "\\n", $f));
+        return function() use(&$f, &$args){
+            return call_user_func_array($f, array_merge($args, func_get_args()));
+        };
+    }        
+    #}
+    
     function getFuncArgs($funcName){
         #$properties = $reflector->getProperties();
         $refFunc = new ReflectionFunction($funcName);
@@ -408,8 +427,7 @@ namespace F\dict{
         return $d;
     }    
     
-    
-    
+
     #transform
     function copyDictToDict($d1, $d2){
         foreach($d1 as $k => $v){
@@ -418,7 +436,11 @@ namespace F\dict{
         return $d2;  
     } 
  
-
+    function mapArray($f, $arr){
+        foreach($arr as $k => $v){
+            yield $f($v, $k);
+        }    
+    }    
 
 }
 
@@ -689,7 +711,11 @@ namespace F\list_{
     }
 
     #folds
-    function reduce($op, $iterable){   
+    function reduce($op, $iterable){
+        
+        #if(is_string($op)) $op = str_replace("\t","\\t", str_replace("\n", "\\n", $op));
+        
+        
         $acc = head($iterable);
         foreach(tail($iterable) as $x){
             $acc = $op($acc, $x); 
@@ -921,6 +947,7 @@ namespace F\io\path{
 //=============
 //mysql
 //=============
+#only use standard sql? rename to sql?
 namespace F\mysql{
     error_reporting(-1);
     #error_reporting(E_STRICT);
@@ -1018,7 +1045,6 @@ namespace F\mysql\table\select{
     error_reporting(-1);
     #error_reporting(E_STRICT);
 
-    
     //if(mysqli_num_rows($r) > 0){
     
     function single($con, $tableName, $fields=["*"], $cond="true"){
@@ -1056,7 +1082,14 @@ namespace F\ini{
     error_reporting(-1);
     #error_reporting(E_STRICT);
     
-    function parseFile($path){ return parse_ini_file($path, true, INI_SCANNER_TYPED); }
+    
+    if(version_compare(PHP_VERSION, '5.6.0', '>=')) {
+        function parseFile($path){ return parse_ini_file($path, true, INI_SCANNER_TYPED); }
+    }
+    else{
+        function parseFile($path){ return parse_ini_file($path, true); }
+    }
+
 }
 
 
@@ -1066,12 +1099,11 @@ namespace F\ini{
 namespace F\image{
     error_reporting(-1);
     #error_reporting(E_STRICT);
-
-    use F\list_ as L;
-
     #Supports: jpg png
     #sudo apt-get install php5-gd
     #sudo apt-get install php5-imagick
+
+    use F\list_ as L;
 
     function resizeImage($path, $new_path, $width, $height){
         #echo $path;
@@ -1135,6 +1167,7 @@ namespace F\image{
 //pdf
 //=============
 namespace F\pdf{
+    #needs imagick
     error_reporting(-1);
     #error_reporting(E_STRICT);
 
@@ -1169,27 +1202,23 @@ namespace F\pdf\thumbnail{
 namespace F\prog{
     error_reporting(-1);
     #error_reporting(E_STRICT);
-
+    use F\dict as D;
+    
     //onExit
     //register_shutdown_function
-
-    function mapArray($f, $arr){
-        foreach($arr as $k => $v){
-            yield $f($v, $k);
-        }    
-    }
 
     //rename to json microservice?
     #todo: failcase -> one fails al fail or ignore defect json?
     function microService($f){
-        $rs = [];
-        foreach($_POST as $k => $v){
-            $rs[] = json_decode($_POST[$k]);
-        }
+        $rs = D\mapArray("json_decode", $_POST);
         echo json_encode(call_user_func($f, $rs), JSON_PRETTY_PRINT);
         exit(0);
     }
 
-    //todo: rss-feed?
+    //todo:
+    //templating skeletons for different formats?
+    #rss
+    #svg?
+    #css
 }
 
