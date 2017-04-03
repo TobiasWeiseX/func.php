@@ -11,16 +11,8 @@ namespace F{
     #error_reporting(E_STRICT);
     use F\list_ as L;
     
-
     #session_unset(); // remove all session variables
     #session_destroy();  // destroy the session
-
-
-    #$ini = ini\parseFile("server.ini.php");
-    #echo $ini["MySQL"]["dbName"];
-
-    #$inc = F\fix("add", 1);
-    #echo $inc(9);
 
     #todo: rewrite
     function function_alias($original, $alias){
@@ -67,6 +59,34 @@ namespace F{
     }
 
     function use_namespace($src){ import_namespace($src, __NAMESPACE__); }
+    
+    #fix replaces the auto-currying-mechanism!
+    
+    #if(version_compare(PHP_VERSION, '5.6.0', '>=')){
+    #    function fix($f, ...$args){
+    #        return function(...$args2) use(&$f, &$args){
+    #            return $f(...$args, ...$args2);
+    #        };
+    #    }        
+    #}
+    #else{
+
+
+    #todo:
+    #$inc = F\fix("add", 1);
+    #move to F
+    function fix(){
+        list($f, $args) = func_get_args();
+        if(is_string($f)) $f = str_replace("\t","\\t", str_replace("\n", "\\n", $f)); #escape namespace path
+        return function() use(&$f, &$args){
+            return call_user_func_array($f, array_merge($args, func_get_args()));
+        };
+    }        
+    #}    
+    
+    
+    
+    
     
     #polymorphic funcs?
     function equal($a, $b){ return $a === $b; }
@@ -302,24 +322,7 @@ namespace F\func{
         return $f;
     }
 
-    #if(version_compare(PHP_VERSION, '5.6.0', '>=')){
-    #    function fix($f, ...$args){
-    #        return function(...$args2) use(&$f, &$args){
-    #            return $f(...$args, ...$args2);
-    #        };
-    #    }        
-    #}
-    #else{
 
-    function fix(){
-        list($f, $args) = func_get_args();
-        if(is_string($f)) $f = str_replace("\t","\\t", str_replace("\n", "\\n", $f));
-        return function() use(&$f, &$args){
-            return call_user_func_array($f, array_merge($args, func_get_args()));
-        };
-    }        
-    #}
-    
     function getFuncArgs($funcName){
         #$properties = $reflector->getProperties();
         $refFunc = new ReflectionFunction($funcName);
@@ -416,7 +419,7 @@ namespace F\dict{
         };
     }   
 
-    #todo: set based version
+    #todo: Set based version
     function groupBy($f, $ls){
         $d = [];
         foreach($ls as $x){
@@ -434,7 +437,7 @@ namespace F\dict{
             $d2[$k] = $v;
         }
         return $d2;  
-    } 
+    }
  
     function mapArray($f, $arr){
         foreach($arr as $k => $v){
