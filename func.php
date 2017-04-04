@@ -667,6 +667,8 @@ namespace F\list_{
         }
     }
  
+    #flatten array
+    
     //todo: make variadic
     function cartProd($ls, $xs){
         foreach($ls as $x){
@@ -765,6 +767,13 @@ namespace F\list_{
         }
     }
 
+    
+    #repeat
+    
+    #replicate
+    
+    
+    
 }
 
 //=============
@@ -773,7 +782,6 @@ namespace F\list_{
 namespace F\string{
     error_reporting(-1);
     #error_reporting(E_STRICT);
-
     use F\list_ as L;
 
     function slice($s, $i, $j){ return substr($s, $i, $j); }
@@ -783,6 +791,7 @@ namespace F\string{
     function lower($s){ return mb_strtolower($s, 'UTF-8'); }
     function length($s){ return mb_strlen($s, 'utf8'); }
 
+    #todo: rewrite
     function fill($n, $s){
         $acc = "";
         for($i=0; $i<$n; $i++){
@@ -794,6 +803,7 @@ namespace F\string{
     function letters($s){ return L\noDoubles(charList($s)); }
     function sepBy($del, $s){ return implode($del, charList($s)); } 
     
+    #todo: rewrite
     function unmask($s, $visibleLetters, $cover="_"){
         $retS = "";
         foreach(charList($s) as $c){
@@ -1096,8 +1106,7 @@ namespace F\mysql\table\select{
 namespace F\ini{
     error_reporting(-1);
     #error_reporting(E_STRICT);
-    
-    
+
     if(version_compare(PHP_VERSION, '5.6.0', '>=')) {
         function parseFile($path){ return parse_ini_file($path, true, INI_SCANNER_TYPED); }
     }
@@ -1106,7 +1115,6 @@ namespace F\ini{
     }
 
 }
-
 
 //=============
 //image
@@ -1213,6 +1221,16 @@ namespace F\pdf\thumbnail{
 
 }
 
+
+#get_defined_vars();
+#phpinfo();
+#json_last_error
+
+
+#create an obj / array hybrid for json?
+
+
+
 //for specialized pages to set up
 namespace F\prog{
     error_reporting(-1);
@@ -1223,9 +1241,13 @@ namespace F\prog{
     //register_shutdown_function
 
     //rename to json microservice?
-    #todo: failcase -> one fails al fail or ignore defect json?
+    #todo: failcase -> one fails all fail or ignore defect json?
     function microService($f){
-        $rs = D\mapArray("json_decode", $_POST);
+        #$rs = D\mapArray("json_decode", $_GET);
+        $rs = [];
+        foreach($_GET as $k => $v){
+            $rs[$k] = json_decode($v, true);
+        }
         echo json_encode(call_user_func($f, $rs), JSON_PRETTY_PRINT);
         exit(0);
     }
