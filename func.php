@@ -72,6 +72,10 @@ namespace F{
     #else{
 
 
+    
+    #get_defined_vars();
+    #phpinfo();
+
     #todo:
     #$inc = F\fix("add", 1);
     #move to F
@@ -572,7 +576,6 @@ namespace F\list_{
         }
     }
 
-
     function toArray($iterable){
         if(is_array($iterable)) return $iterable;
         $rs = [];
@@ -823,10 +826,26 @@ namespace F\string{
         return $rs;
     }
 
-    function join_($del, $ls){#cause implode doesnt know generators
+    #cause implode doesnt know generators
+    function join_($del, $ls){
         return L\reduce(function($a, $b)use($del){return $a.$del.$b;}, $ls);
     }   
 
+    
+    #split?
+
+    #TODO create genericFunc that produces paires like lines & unlines
+
+    function lines($s){ return explode("\n", $s); }
+    function unlines($lines){ return join_("\n", $lines); }
+
+    function tab($lines){
+        foreach($lines as $line){
+            yield "\t".$line;
+        }
+    }    
+    
+    
 }
 
 //=============
@@ -932,7 +951,7 @@ namespace F\io\dir{
             mkdir($path);
             return is_dir($path);
         }
-        return true;
+        else return true;
     }
 
     function preg_ls ($path=".", $rec=false, $pat="/.*/") {
@@ -1222,14 +1241,28 @@ namespace F\pdf\thumbnail{
 }
 
 
-#get_defined_vars();
-#phpinfo();
-#json_last_error
+//=============
+//CSS
+//=============
+
+namespace F\css{
+    error_reporting(-1);
+    #error_reporting(E_STRICT);
+
+    function attribute($prefixes, $name, $val){
+        yield $name.": ".$val.";";
+        foreach($prefixes as $pfx){
+            yield "-".$pfx."-".$name.": ".$val.";";
+        }
+    }
 
 
-#create an obj / array hybrid for json?
+}
 
 
+//=======================================
+//Feed/OnePager/Microservice/RPC-Sever
+//=======================================
 
 //for specialized pages to set up
 namespace F\prog{
@@ -1243,11 +1276,14 @@ namespace F\prog{
     //rename to json microservice?
     #todo: failcase -> one fails all fail or ignore defect json?
     function microService($f){
+        #create an obj / array hybrid for json?
         #$rs = D\mapArray("json_decode", $_GET);
         $rs = [];
         foreach($_GET as $k => $v){
             $rs[$k] = json_decode($v, true);
         }
+        #todo: error handling!
+        #json_last_error
         echo json_encode(call_user_func($f, $rs), JSON_PRETTY_PRINT);
         exit(0);
     }
