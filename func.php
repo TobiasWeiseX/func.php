@@ -302,14 +302,19 @@ namespace F\func{
         }
         #return $f instanceof Generator;
     }
-    
-    #todo: create comp
+
     function compose(&$f, &$g){
         return function() use($f,$g){
             return $f(call_user_func_array($g, func_get_args()));
         };
     }
 
+    function comp(){
+        $fs = func_get_args();
+        $f = L\reduce(__NAMESPACE__."\compose", $fs);
+        return $f;
+    }    
+    
     #doesnt work:
     #$f = F\func\variadicOp("F\number\add", "F\func\iden");
     #echo $f(1,2,3);
@@ -321,13 +326,6 @@ namespace F\func{
         };
     }
 
-    function comp(){
-        $fs = func_get_args();
-        $f = L\reduce(__NAMESPACE__."\compose", $fs);
-        return $f;
-    }
-
-
     function getFuncArgs($funcName){
         #$properties = $reflector->getProperties();
         $refFunc = new ReflectionFunction($funcName);
@@ -335,6 +333,15 @@ namespace F\func{
             yield $param;
         }
     }
+    
+    #ReflectionFunction
+    #getStaticVariables
+    #getNumberOfRequiredParameters
+    #getNumberOfParameters
+    #inNamespace
+    #isInternal
+    #isUserDefined
+    
     
     /*
     #Y-combinator
@@ -485,11 +492,11 @@ namespace F\list_{
  
     function last($iterable){
         if(is_array($iterable)) return $iterable[count($iterable)-1];
-        $current = null;
+        $r = null;
         foreach($iterable as $x){
-            $current = $x;
+            $r = $x;
         }
-        return $current;
+        return $r;
     }
  
     #is_object
