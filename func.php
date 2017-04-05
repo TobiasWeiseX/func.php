@@ -1,10 +1,16 @@
 <?php
-//=========================================================================
-//						Functional Programming
-//=========================================================================
-//Author: Tobias Weise
-//License: BSD3
+//==========================================
+//				func.php		
+//==========================================
+//functional Programming with php
+//@Author: Tobias Weise
+//@License: BSD3
 //https://opensource.org/licenses/BSD-3-Clause
+//sister library to func.js
+
+//TODO: Write the manifest laying out all the desgin prinicples used for the lib!
+//use namespaces for shorter funcnames & performance/jit-opcode-compilation
+//way to set strict mode globally?
 
 namespace F{
     error_reporting(-1);
@@ -223,12 +229,10 @@ namespace F{
 //=============
 //Boolean
 //=============
-
 namespace F\bool{
     error_reporting(-1);
     #error_reporting(E_STRICT);
-
-
+    
     function not($x){ return !$x; }
     function and_($a, $b){ return $a && $b; }
     function or_($a, $b){ return $a || $b; }
@@ -237,7 +241,6 @@ namespace F\bool{
 //=============
 //Number
 //=============
-
 namespace F\number{
     error_reporting(-1);
     #error_reporting(E_STRICT);
@@ -256,7 +259,6 @@ namespace F\number{
 //=============
 //Tuple
 //=============
-
 namespace F\tuple{
     #http://hackage.haskell.org/package/base-4.8.1.0/docs/Data-Tuple.html
     error_reporting(-1);
@@ -366,7 +368,7 @@ namespace F\func{
     print $factorial( 5 );
 
     */    
-    
+
     #MEMOIZATION DECO
     
     /*
@@ -401,7 +403,6 @@ namespace F\func{
 //=============
 //Dictionary
 //=============
-
 namespace F\dict{
     error_reporting(-1);
     #error_reporting(E_STRICT);
@@ -804,6 +805,8 @@ namespace F\string{
     }
  
     function letters($s){ return L\noDoubles(charList($s)); }
+    
+    #alternative haskell name? intersperse?
     function sepBy($del, $s){ return implode($del, charList($s)); } 
     
     #todo: rewrite
@@ -833,6 +836,10 @@ namespace F\string{
 
     
     #split?
+
+    #text module?
+    #define newline, space, indentation on text basis:
+    #<br /> not \n, 4x" " instead of \t
 
     #TODO create genericFunc that produces paires like lines & unlines
 
@@ -905,6 +912,10 @@ namespace F\io\file{
         fclose($f);
     }
 
+    #generators for file reading?
+    #and parsing?
+    #or higher order funcs?
+    
     function read($path){
         $h = fopen($path, 'r');
         $c = fgets($h);
@@ -1076,11 +1087,13 @@ namespace F\mysql\table{
 
 
 
-    #function varchar($n){
+    #function isVarchar($n){
     #    if($n > 767){
-    #        die("varchar limit is 767!");
+    #        #die("varchar limit is 767!");
+    #        return false;
     #    }
-    #    return "varchar(".$n.")";
+    #    #return "varchar(".$n.")";
+    #    return true;
     #}
 
 }
@@ -1240,7 +1253,6 @@ namespace F\pdf\thumbnail{
 
 }
 
-
 //=============
 //CSS
 //=============
@@ -1256,9 +1268,7 @@ namespace F\css{
         }
     }
 
-
 }
-
 
 //=======================================
 //Feed/OnePager/Microservice/RPC-Sever
@@ -1290,22 +1300,22 @@ namespace F\prog{
                     $rs[$k] = $jsonV;
                     continue;
                 case JSON_ERROR_DEPTH:
-                    $rs[$k] = "Maximale Stacktiefe ueberschritten";
+                    $rs[$k] = "Max Stackdepth reached";
                     continue;
                 case JSON_ERROR_STATE_MISMATCH:
-                    $rs[$k] = "Unterlauf oder Nichtuebereinstimmung der Modi";
+                    $rs[$k] = "State/Mode mismatch!";
                     continue;
                 case JSON_ERROR_CTRL_CHAR:
-                    $rs[$k] = "Unerwartetes Steuerzeichen gefunden";
+                    $rs[$k] = "Unexpected control char found!";
                     continue;
                 case JSON_ERROR_SYNTAX:
-                    $rs[$k] = "Syntaxfehler, ungueltiges JSON";
+                    $rs[$k] = "Syntaxerror, invalid JSON!";
                     continue;
                 case JSON_ERROR_UTF8:
-                    $rs[$k] = "Missgestaltete UTF-8 Zeichen, moeglicherweise fehlerhaft kodiert";
+                    $rs[$k] = "Malformed UTF-8 char, possibly faulty decoded";
                     continue;
                 default:
-                    $rs[$k] = "Unbekannter Fehler";
+                    $rs[$k] = "Unknown error!";
                     continue;
             }
         }
