@@ -1275,15 +1275,40 @@ namespace F\prog{
 
     //rename to json microservice?
     #todo: failcase -> one fails all fail or ignore defect json?
+
     function microService($f){
-        #create an obj / array hybrid for json?
-        #$rs = D\mapArray("json_decode", $_GET);
-        $rs = [];
-        foreach($_GET as $k => $v){
-            $rs[$k] = json_decode($v, true);
+        if(!empty($_POST)) $ARGS = $_POST;
+        else{
+            if(!empty($_GET)) $ARGS = $_GET;
+            else $ARGS = [];       
         }
-        #todo: error handling!
-        #json_last_error
+        $rs = [];
+        foreach($ARGS as $k => $v){
+            $jsonV = json_decode($v, true);
+            switch(json_last_error()){
+                case JSON_ERROR_NONE:
+                    $rs[$k] = $jsonV;
+                    continue;
+                case JSON_ERROR_DEPTH:
+                    $rs[$k] = "Maximale Stacktiefe ueberschritten";
+                    continue;
+                case JSON_ERROR_STATE_MISMATCH:
+                    $rs[$k] = "Unterlauf oder Nichtuebereinstimmung der Modi";
+                    continue;
+                case JSON_ERROR_CTRL_CHAR:
+                    $rs[$k] = "Unerwartetes Steuerzeichen gefunden";
+                    continue;
+                case JSON_ERROR_SYNTAX:
+                    $rs[$k] = "Syntaxfehler, ungueltiges JSON";
+                    continue;
+                case JSON_ERROR_UTF8:
+                    $rs[$k] = "Missgestaltete UTF-8 Zeichen, moeglicherweise fehlerhaft kodiert";
+                    continue;
+                default:
+                    $rs[$k] = "Unbekannter Fehler";
+                    continue;
+            }
+        }
         echo json_encode(call_user_func($f, $rs), JSON_PRETTY_PRINT);
         exit(0);
     }
