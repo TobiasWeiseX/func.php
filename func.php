@@ -12,6 +12,11 @@
 //use namespaces for shorter funcnames & performance/jit-opcode-compilation
 //way to set strict mode globally?
 
+//the right way to force errors?
+//https://secure.php.net/manual/de/errorfunc.constants.php
+
+
+
 namespace F{
     error_reporting(-1);
     #error_reporting(E_STRICT);
