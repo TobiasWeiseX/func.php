@@ -1144,6 +1144,7 @@ namespace F\ini{
     error_reporting(-1);
     #error_reporting(E_STRICT);
 
+    #todo: reduce if to change of only the used constant
     if(version_compare(PHP_VERSION, '5.6.0', '>=')) {
         function parseFile($path){ return parse_ini_file($path, true, INI_SCANNER_TYPED); }
     }
