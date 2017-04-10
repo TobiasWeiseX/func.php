@@ -860,6 +860,10 @@ namespace F\string{
     
 }
 
+#todo: S-Expr module
+
+
+
 //=============
 //Regex
 //=============
@@ -889,6 +893,8 @@ namespace F\io\file{
     error_reporting(-1);
     #error_reporting(E_STRICT);
 
+    #0777 means ?
+    
     function showPerm($path){ return decoct(fileperms($path) & 0777); }
     function hasPerm($path){ return 0755 === (fileperms($path) & 0777); }
     function exists($p){ return file_exists($p); }
@@ -1281,6 +1287,15 @@ namespace F\css{
 //=======================================
 
 //for specialized pages to set up
+
+//todo:
+//templating skeletons for different formats?
+
+#fileProduction:
+#xml: rss, svg
+#css
+#ini ?
+
 namespace F\prog{
     error_reporting(-1);
     #error_reporting(E_STRICT);
@@ -1329,10 +1344,6 @@ namespace F\prog{
         exit(0);
     }
 
-    //todo:
-    //templating skeletons for different formats?
-    #rss
-    #svg?
-    #css
+
 }
 
