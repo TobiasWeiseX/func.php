@@ -871,6 +871,11 @@ namespace F\regex{
     error_reporting(-1);
     #error_reporting(E_STRICT);
 
+
+    #$regex = '#<a [^>]*href="(.)*"[^>]*>(.*)</a>#';
+    #create predicate from regex?
+
+
     function findAll($rgx, $txt){
         $rs = [];
         preg_match_all("#".$rgx."#", $txt, $rs);
@@ -1039,6 +1044,8 @@ namespace F\mysql{
 namespace F\mysql\types{
     error_reporting(-1);
     #error_reporting(E_STRICT);
+
+    define(__NAMESPACE__."\\Integer","INTEGER");
 }
 
 namespace F\mysql\table{
@@ -1264,6 +1271,13 @@ namespace F\pdf\thumbnail{
     }
 
 }
+
+
+//hashing
+//Sha1 md5
+
+
+
 
 //=============
 //CSS
