@@ -300,6 +300,17 @@ namespace F\func{
     function right($a, $b){ return $b; }
     function isFunc($f){ return function_exists($f); }
 
+    #disable Echoing!
+    function silent($f){
+        return function() use (&$f){
+            $args = func_get_args();
+            ob_start();
+            $r = call_user_func($f, $args);
+            ob_end_clean();
+            return $r;
+        };
+    }   
+
     #todo: make work!
     function isGenFunc($f){
         try{
@@ -768,8 +779,7 @@ namespace F\list_{
         while(true){
             foreach($iterable as $x){
                 #if(isGen($x)) $x->rewind();         
-                
-                
+
                 #yield copy($x)?
                 yield $x;  
             } 
@@ -788,17 +798,25 @@ namespace F\list_{
 //=============
 //String
 //=============
+
+#todo: use mb/multibyte string funcs only!
+
 namespace F\string{
     error_reporting(-1);
     #error_reporting(E_STRICT);
     use F\list_ as L;
 
-    function slice($s, $i, $j){ return substr($s, $i, $j); }
+    function slice($i, $j, $s){ return mb_substr($s, $i, $j-$i+1); }
+    
+    
+    #wrapper
     function add($a, $b){ return $a.$b; }
-    function charList($s){ return preg_split('//u', $s, null, PREG_SPLIT_NO_EMPTY); }
-    function upper($s){ return mb_strtoupper($s, 'UTF-8'); }
-    function lower($s){ return mb_strtolower($s, 'UTF-8'); }
+    function upper($s){ return mb_strtoupper($s, 'utf8'); }
+    function lower($s){ return mb_strtolower($s, 'utf8'); }
     function length($s){ return mb_strlen($s, 'utf8'); }
+
+    
+    function charList($s){ return preg_split('//u', $s, null, PREG_SPLIT_NO_EMPTY); }
 
     #todo: rewrite
     function fill($n, $s){
@@ -809,21 +827,11 @@ namespace F\string{
         return $acc;
     }
  
+    function hasSubstr($s, $ss){ return strpos($s, $ss) !== false; }
     function letters($s){ return L\noDoubles(charList($s)); }
     
     #alternative haskell name? intersperse?
     function sepBy($del, $s){ return implode($del, charList($s)); } 
-    
-    #todo: rewrite
-    function unmask($s, $visibleLetters, $cover="_"){
-        $retS = "";
-        foreach(charList($s) as $c){
-            $retS .= L\hasElem($visibleLetters, $c) ? $c : $cover;
-        }
-        return $retS;
-    }   
-
-    function hasSubstr($s, $ss){ return strpos($s, $ss) !== false; }
 
     function charPos($s, $c){
         $rs = [];
@@ -848,21 +856,41 @@ namespace F\string{
 
     #TODO create genericFunc that produces paires like lines & unlines
 
+    
+    #todo: rewrite
+    function unmask($s, $visibleLetters, $cover="_"){
+        $retS = "";
+        foreach(charList($s) as $c){
+            $retS .= L\hasElem($visibleLetters, $c) ? $c : $cover;
+        }
+        return $retS;
+    }    
+    
+    #Text
     function lines($s){ return explode("\n", $s); }
     function unlines($lines){ return join_("\n", $lines); }
-
     function tab($lines){
         foreach($lines as $line){
             yield "\t".$line;
         }
     }    
-    
+
+    #quotation
+    function isQuoted($s){
+        if($s[0]==='"' && $s[length($s)-1]==='"') return true;
+        if($s[0]==="'" && $s[length($s)-1]==="'") return true;
+        return false;
+    }
+    function unquote($s){ return slice(1, length($s)-2, $s); }
     
 }
 
+#(def f (a b) (+ a b))
 #todo: S-Expr module
+namespace F\sexpr{
+    error_reporting(-1);
 
-
+}
 
 //=============
 //Regex
@@ -1321,6 +1349,14 @@ namespace F\prog{
     //rename to json microservice?
     #todo: failcase -> one fails all fail or ignore defect json?
 
+    
+    
+    
+
+    
+    #a:
+    #goto a;
+
     function microService($f){
         if(!empty($_POST)) $ARGS = $_POST;
         else{
@@ -1336,24 +1372,30 @@ namespace F\prog{
                     continue;
                 case JSON_ERROR_DEPTH:
                     $rs[$k] = "Max Stackdepth reached";
-                    continue;
+                    goto end;
                 case JSON_ERROR_STATE_MISMATCH:
                     $rs[$k] = "State/Mode mismatch!";
-                    continue;
+                    goto end;
                 case JSON_ERROR_CTRL_CHAR:
                     $rs[$k] = "Unexpected control char found!";
-                    continue;
+                    goto end;
                 case JSON_ERROR_SYNTAX:
-                    $rs[$k] = "Syntaxerror, invalid JSON!";
+                    #$rs[$k] = "Syntaxerror, invalid JSON!(".$v.")";
+                    #goto end;
+                    $rs[$k] = '"'.$v.'"';
                     continue;
+                    
                 case JSON_ERROR_UTF8:
                     $rs[$k] = "Malformed UTF-8 char, possibly faulty decoded";
-                    continue;
+                    goto end;
                 default:
                     $rs[$k] = "Unknown error!";
-                    continue;
+                    goto end;
             }
         }
+        end:
+        
+        
         echo json_encode(call_user_func($f, $rs), JSON_PRETTY_PRINT);
         exit(0);
     }
