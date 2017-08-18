@@ -960,8 +960,13 @@ namespace F\io\file{
     #and parsing?
     #or higher order funcs?
     
+    
+    #error case handling?
     function read($path){
         $h = fopen($path, 'r');
+        
+        #if(!$h) return null;
+        
         $c = fgets($h);
         fclose($h);
         return $c;
@@ -1062,7 +1067,7 @@ namespace F\mysql{
         $con = mysqli_connect($host, $user, $pwd, $db);
         if($con === false){
             #die("Connection failed: " . mysqli_connect_error());
-            throw new Exception("Connection failed: " . mysqli_connect_error());
+            throw new \Exception("Connection failed: " . mysqli_connect_error());
         }
         else return $con;
     }
@@ -1349,11 +1354,6 @@ namespace F\prog{
     //rename to json microservice?
     #todo: failcase -> one fails all fail or ignore defect json?
 
-    
-    
-    
-
-    
     #a:
     #goto a;
 
@@ -1365,6 +1365,10 @@ namespace F\prog{
         }
         $rs = [];
         foreach($ARGS as $k => $v){
+            
+            #todo: lots of case handling to do very buggy
+            
+            
             $jsonV = json_decode($v, true);
             switch(json_last_error()){
                 case JSON_ERROR_NONE:
@@ -1396,7 +1400,29 @@ namespace F\prog{
         end:
         
         
-        echo json_encode(call_user_func($f, $rs), JSON_PRETTY_PRINT);
+    
+    
+        //make silencing context part of microservice func?! ;D
+        #ob_start();
+        #$adldap = new adLDAP();
+        
+
+        ob_start();
+        
+        
+        try{
+            $r = call_user_func($f, $rs);
+        }
+        catch(Exception $e){
+            F\io\file\write("err.log", ''.$e);
+        }
+        
+        
+        ob_end_clean();
+
+        
+        header('Content-Type: application/json');
+        echo json_encode($r, JSON_PRETTY_PRINT);
         exit(0);
     }
 
