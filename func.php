@@ -115,12 +115,33 @@ namespace F{
     function unEqual($a, $b){ return $a !== $b; }
     function isNull($x){ return is_null($x); }
 
+    #JSON
     function toJSON($x){
         if(L\isGen($x)) $x = toArray($x);
         return json_encode($x, JSON_PRETTY_PRINT);
     }
 
-    function echoJSON($x){ echo toJSON($x); }
+    function fromJSON($s){
+        
+        #remove whitespace?
+        #$s = preg_replace('/.+?({.+}).+/','$1', $s);
+
+        $x = json_decode($s, true);
+        #if(is_null($x)){
+            #echo 'Letzter Fehler: ', $json_errors[json_last_error()], PHP_EOL, PHP_EOL;
+
+            #return json_last_error_msg().' '.$s;
+            
+            
+            #\F\io\file\write("err.log","json_decode ".json_last_error_msg().' '.$s);
+            #return [];
+            
+        #}
+        return $x;
+    }
+
+    function echoJSON($s){ echo toJSON($s); }
+
     
     #todo: coroutine
     function execTime($f, $args){
@@ -963,18 +984,21 @@ namespace F\io\file{
     
     #error case handling?
     function read($path){
-        $h = fopen($path, 'r');
+        #$h = fopen($path, 'r');
         
         #if(!$h) return null;
-        
-        $c = fgets($h);
-        fclose($h);
-        return $c;
+        #$c = fgets($h);
+
+        #fclose($h);
+        #return $c;
+
+        return file_get_contents($path);
     }
 
     function readBin($path){
         $h = fopen($path, 'rb');
-        $c = fgets($h);
+        $c = fgets($h); #read only 1 line
+        #-> loop here
         fclose($h);
         return $c;
     }
@@ -1130,6 +1154,8 @@ namespace F\mysql\table{
 
     function insert($con, $tableName, $dict){
         $fields = implode(',', D\keys($dict));
+        
+        #todo: use toJSON?
         $values = substr(json_encode(D\values($dict)), 1, -1);
         return M\query($con, "INSERT INTO ".$tableName."(".$fields.") VALUES (".$values.")");
     }
@@ -1367,9 +1393,8 @@ namespace F\prog{
         foreach($ARGS as $k => $v){
             
             #todo: lots of case handling to do very buggy
-            
-            
-            $jsonV = json_decode($v, true);
+            $jsonV = \F\fromJSON($v);
+
             switch(json_last_error()){
                 case JSON_ERROR_NONE:
                     $rs[$k] = $jsonV;
@@ -1399,30 +1424,34 @@ namespace F\prog{
         }
         end:
         
-        
-    
-    
-        //make silencing context part of microservice func?! ;D
-        #ob_start();
-        #$adldap = new adLDAP();
-        
 
+        //make silencing context part of microservice
         ob_start();
-        
-        
         try{
             $r = call_user_func($f, $rs);
         }
         catch(Exception $e){
-            F\io\file\write("err.log", ''.$e);
+            #todo: append to log file?
+            \F\io\file\write("err.log", ''.$e);
         }
-        
-        
         ob_end_clean();
 
         
+        
+        
+        
         header('Content-Type: application/json');
-        echo json_encode($r, JSON_PRETTY_PRINT);
+        
+        #\F\io\file\write("err.log", ">>> ".json_encode($r));
+        
+        $outJSON = \F\toJSON($r);
+        
+        \F\io\file\write("err.log", ">>> ".$outJSON);
+        
+        
+        echo utf8_encode($outJSON);
+        
+        
         exit(0);
     }
 
