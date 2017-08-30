@@ -121,28 +121,16 @@ namespace F{
         return json_encode($x, JSON_PRETTY_PRINT);
     }
 
+    #utf8 strings r ideal!
     function fromJSON($s){
-        
-        #remove whitespace?
-        #$s = preg_replace('/.+?({.+}).+/','$1', $s);
-
-        $x = json_decode($s, true);
-        #if(is_null($x)){
-            #echo 'Letzter Fehler: ', $json_errors[json_last_error()], PHP_EOL, PHP_EOL;
-
-            #return json_last_error_msg().' '.$s;
-            
-            
-            #\F\io\file\write("err.log","json_decode ".json_last_error_msg().' '.$s);
-            #return [];
-            
-        #}
-        return $x;
+        if(is_string($s)){
+            return json_decode($s, true);
+        }
+        throw new Exception("Parse value must be string!");
     }
 
     function echoJSON($s){ echo toJSON($s); }
 
-    
     #todo: coroutine
     function execTime($f, $args){
         $t1 = microtime(true);
@@ -1383,75 +1371,59 @@ namespace F\prog{
     #a:
     #goto a;
 
-    function microService($f){
-        if(!empty($_POST)) $ARGS = $_POST;
-        else{
-            if(!empty($_GET)) $ARGS = $_GET;
-            else $ARGS = [];       
-        }
-        $rs = [];
-        foreach($ARGS as $k => $v){
-            
-            #todo: lots of case handling to do very buggy
-            $jsonV = \F\fromJSON($v);
-
+    
+    #deprecate GET and change to post[json] only!
+    #put jwt in header always!?
+    
+    #$log = function($s){
+    #    \F\io\file\appendLn("err.log", $s);
+    #};
+    
+    function microService($f, $log=null){
+        if(is_null($log)) $log = function($s){};
+        if(!empty($_POST) && isset($_POST["json"])){
+            $jsonV = \F\fromJSON($_POST["json"]);
             switch(json_last_error()){
-                case JSON_ERROR_NONE:
-                    $rs[$k] = $jsonV;
-                    continue;
+                case JSON_ERROR_NONE: break;
                 case JSON_ERROR_DEPTH:
-                    $rs[$k] = "Max Stackdepth reached";
-                    goto end;
+                    $log("Max Stackdepth reached");
+                    $jsonV = [];
+                    break;
                 case JSON_ERROR_STATE_MISMATCH:
-                    $rs[$k] = "State/Mode mismatch!";
-                    goto end;
+                    $log("State/Mode mismatch!");
+                    $jsonV = [];
+                    break;
                 case JSON_ERROR_CTRL_CHAR:
-                    $rs[$k] = "Unexpected control char found!";
-                    goto end;
+                    $log("Unexpected control char found!");
+                    $jsonV = [];
+                    break;
                 case JSON_ERROR_SYNTAX:
-                    #$rs[$k] = "Syntaxerror, invalid JSON!(".$v.")";
-                    #goto end;
-                    $rs[$k] = '"'.$v.'"';
-                    continue;
-                    
+                    $log("Syntaxerror, invalid JSON!");
+                    $jsonV = [];
+                    break;
                 case JSON_ERROR_UTF8:
-                    $rs[$k] = "Malformed UTF-8 char, possibly faulty decoded";
-                    goto end;
+                    $log("Malformed UTF-8 char, possibly faulty decoded");
+                    $jsonV = [];
+                    break;
                 default:
-                    $rs[$k] = "Unknown error!";
-                    goto end;
+                    $log("Unknown error!");
+                    $jsonV = [];
+                    break;
             }
         }
-        end:
-        
-
-        //make silencing context part of microservice
+        else{
+            $jsonV = [];
+        }
         ob_start();
         try{
-            $r = call_user_func($f, $rs);
+            $r = call_user_func($f, $jsonV);
         }
         catch(Exception $e){
-            #todo: append to log file?
-            \F\io\file\write("err.log", ''.$e);
+            $log(''.$e);
         }
         ob_end_clean();
-
-        
-        
-        
-        
         header('Content-Type: application/json');
-        
-        #\F\io\file\write("err.log", ">>> ".json_encode($r));
-        
-        $outJSON = \F\toJSON($r);
-        
-        \F\io\file\write("err.log", ">>> ".$outJSON);
-        
-        
-        echo utf8_encode($outJSON);
-        
-        
+        echo utf8_encode(\F\toJSON($r));
         exit(0);
     }
 
