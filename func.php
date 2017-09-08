@@ -1,6 +1,6 @@
 <?php
 //==========================================
-//				func.php		
+//				func.php
 //==========================================
 //functional Programming with php
 //@Author: Tobias Weise
@@ -21,7 +21,7 @@ namespace F{
     error_reporting(-1);
     #error_reporting(E_STRICT);
     use F\list_ as L;
-    
+
     #session_unset(); // remove all session variables
     #session_destroy();  // destroy the session
 
@@ -70,20 +70,20 @@ namespace F{
     }
 
     function use_namespace($src){ import_namespace($src, __NAMESPACE__); }
-    
+
     #fix replaces the auto-currying-mechanism!
-    
+
     #if(version_compare(PHP_VERSION, '5.6.0', '>=')){
     #    function fix($f, ...$args){
     #        return function(...$args2) use(&$f, &$args){
     #            return $f(...$args, ...$args2);
     #        };
-    #    }        
+    #    }
     #}
     #else{
 
 
-    
+
     #get_defined_vars();
     #phpinfo();
 
@@ -96,9 +96,9 @@ namespace F{
         return function() use(&$f, &$args){
             return call_user_func_array($f, array_merge($args, func_get_args()));
         };
-    }        
-    #}    
-    
+    }
+    #}
+
     #__FILE__ – The full path and filename of the file.
     #__DIR__ – The directory of the file.
     #__CLASS__ – The class name.
@@ -108,7 +108,7 @@ namespace F{
     #__FUNCTION__ – The function name.
     #__NAMESPACE__ – The name of the current namespace
 
-    
+
 
     #polymorphic funcs?
     function equal($a, $b){ return $a === $b; }
@@ -123,10 +123,8 @@ namespace F{
 
     #utf8 strings r ideal!
     function fromJSON($s){
-        if(is_string($s)){
-            return json_decode($s, true);
-        }
-        throw new Exception("Parse value must be string!");
+        if(!is_string($s)) throw new Exception("Parse value must be string!");
+        return json_decode($s, true);
     }
 
     function echoJSON($s){ echo toJSON($s); }
@@ -150,14 +148,14 @@ namespace F{
     }
     */
 
-    
+
     #$this->{$property} = $argument;
     #!is_callable($f)
     #memory_get_usage()
     #is_array
 
 
-    
+
     #mimic JS-obj literals!
     #ArrayWrapperClass -> as Map keys / Set values!
     function newObj($d){
@@ -168,7 +166,7 @@ namespace F{
         return $obj;
     }
 
-    
+
     #todo: constructor args : list
     #non-Object types?
     #todo: json-compatible
@@ -180,7 +178,7 @@ namespace F{
             $this->set = new \SplObjectStorage();
             $this->array = [];
         }
-        
+
         #todo: does not differentiate between 1 and "1"!
         public function add($x){
             #todo: make work with array!
@@ -203,13 +201,13 @@ namespace F{
     }
 
     function Set(){ return (new SimpleSet()); }
-    
+
     #todo: constructor args : dict
     #todo: json-compatible
     class SimpleMap{
         private $map;
         private $array; #for all the string keys.. that r not objs in php xD �.�
-        
+
         public function __construct(){
             $this->map = new \SplObjectStorage();
             $this->array = [];
@@ -230,12 +228,12 @@ namespace F{
         }
         public function has($x){
             if(gettype($x)==="string") return isset($this->array[$x]);
-            else return isset($this->map[$x]);        
+            else return isset($this->map[$x]);
         }
         public function size(){ return count($this->array) + $this->map->count(); }
-    }    
+    }
 
-    #todo: func_args    
+    #todo: func_args
     function Map(){ return (new SimpleMap()); }
 
 }
@@ -246,7 +244,7 @@ namespace F{
 namespace F\bool{
     error_reporting(-1);
     #error_reporting(E_STRICT);
-    
+
     function not($x){ return !$x; }
     function and_($a, $b){ return $a && $b; }
     function or_($a, $b){ return $a || $b; }
@@ -264,7 +262,7 @@ namespace F\number{
     function between($min, $max, $x){ return $min < $x && $x < $max; }
     function percentOf($a, $b){ return ($b===0) ? null : ($a/($b/100.0)); }
     function inc($x){ return $x + 1; }
-    function dec($x){ return $x - 1; }    
+    function dec($x){ return $x - 1; }
     function add($a, $b){ return $a + $b; }
     function sub($a, $b){ return $a - $b; }
     function multi($a, $b){ return $a * $b; }
@@ -318,7 +316,7 @@ namespace F\func{
             ob_end_clean();
             return $r;
         };
-    }   
+    }
 
     #todo: make work!
     function isGenFunc($f){
@@ -344,8 +342,8 @@ namespace F\func{
         $fs = func_get_args();
         $f = L\reduce(__NAMESPACE__."\compose", $fs);
         return $f;
-    }    
-    
+    }
+
     #doesnt work:
     #$f = F\func\variadicOp("F\number\add", "F\func\iden");
     #echo $f(1,2,3);
@@ -364,7 +362,7 @@ namespace F\func{
             yield $param;
         }
     }
-    
+
     #ReflectionFunction
     #getStaticVariables
     #getNumberOfRequiredParameters
@@ -372,8 +370,8 @@ namespace F\func{
     #inNamespace
     #isInternal
     #isUserDefined
-    
-    
+
+
     /*
     #Y-combinator
     function fix( $func ){
@@ -392,10 +390,10 @@ namespace F\func{
 
     print $factorial( 5 );
 
-    */    
+    */
 
     #MEMOIZATION DECO
-    
+
     /*
     function get_static_rand() {
         static $rand = null;
@@ -409,9 +407,9 @@ namespace F\func{
     echo "<br><br>";
 
     echo get_static_rand(); // 985873932
-    */    
-    
-    
+    */
+
+
     /*
     function fac($n){
         static $mem = null;
@@ -422,7 +420,7 @@ namespace F\func{
         return $n * fac($n - 1);
     }
     */
-    
+
 }
 
 //=============
@@ -433,7 +431,7 @@ namespace F\dict{
     #error_reporting(E_STRICT);
 
     #null as universal NaN value?
-    
+
     function isKey($k, $arr){ return array_key_exists($k, $arr); }
     function lookUp($k, $arr){ return $arr[$k]; }
     function keys($arr){ return array_keys($arr); }
@@ -459,7 +457,7 @@ namespace F\dict{
         return function($x) use($ls){
             return $ls[$x];
         };
-    }   
+    }
 
     #todo: Set based version
     function groupBy($f, $ls){
@@ -470,22 +468,22 @@ namespace F\dict{
             else $d[$v] = [$x];
         }
         return $d;
-    }    
-    
+    }
+
 
     #transform
     function copyDictToDict($d1, $d2){
         foreach($d1 as $k => $v){
             $d2[$k] = $v;
         }
-        return $d2;  
+        return $d2;
     }
- 
+
     function mapArray($f, $arr){
         foreach($arr as $k => $v){
             yield $f($v, $k);
-        }    
-    }    
+        }
+    }
 
 }
 
@@ -501,7 +499,7 @@ namespace F\list_{
     #error_reporting(E_STRICT);
     #http://hackage.haskell.org/package/base-4.8.1.0/docs/Data-List.html
 
-    function single($x){ return [$x]; }    
+    function single($x){ return [$x]; }
     function isEmpty($iterable){ return length($iterable)==0; }
 
     function length($iterable){
@@ -519,7 +517,7 @@ namespace F\list_{
         }
         return null;
     }
- 
+
     function last($iterable){
         if(is_array($iterable)) return $iterable[count($iterable)-1];
         $r = null;
@@ -528,9 +526,9 @@ namespace F\list_{
         }
         return $r;
     }
- 
+
     #is_object
-    
+
     function index($i, $ls){ return last(take($i+1, $ls)); }
 
 
@@ -538,9 +536,9 @@ namespace F\list_{
         #gettype($anon);
         #if($f instanceof Iterator){
         return $ls instanceof Generator;
-    }    
-    
-    
+    }
+
+
     #A Generalization of Leftmost Derivations.
 
 
@@ -548,8 +546,8 @@ namespace F\list_{
 
 
 
-    #$anon instanceof \Closure; 
-    
+    #$anon instanceof \Closure;
+
     #function isGen($f){
     #    try{
     #        if($f instanceof Iterator){
@@ -561,10 +559,10 @@ namespace F\list_{
     #        return false;
     #    }
     #    #return $f instanceof Generator;
-    #}    
-    
-    
-    
+    #}
+
+
+
     function range_($start, $end, $step=1){
         for($i=$start; $i<=$end; $i+=$step){
             yield $i;
@@ -586,19 +584,19 @@ namespace F\list_{
     }
 
     function extend($iterable, $iterable2){
-        foreach($iterable as $x){       
+        foreach($iterable as $x){
             yield $x;
         }
-        foreach($iterable2 as $x){       
+        foreach($iterable2 as $x){
             yield $x;
-        }    
+        }
     }
 
     function concat($ls){
-        foreach($ls as $xs){ 
+        foreach($ls as $xs){
             foreach($xs as $x){
                 yield $x;
-            }            
+            }
         }
     }
 
@@ -607,10 +605,10 @@ namespace F\list_{
         $rs = [];
         foreach($iterable as $x){
             $rs[] = $x;
-        }    
+        }
         return $rs;
     }
-   
+
     function toGen($iterable){
         foreach($iterable as $x){
             yield $x;
@@ -644,32 +642,32 @@ namespace F\list_{
             $g1->next();
             $g2->next();
         }
-    }    
- 
+    }
+
     function zip3($a, $b, $c){
         $g1 = toGen($a);
         $g2 = toGen($b);
-        $g3 = toGen($c);        
+        $g3 = toGen($c);
         while($g1->valid() && $g2->valid() && $g3->valid()){
             yield [$g1->current(), $g2->current(), $g3->current()];
             $g1->next();
             $g2->next();
             $g3->next();
         }
-    }    
+    }
     */
-    
-    
+
+
     function zip(){
         $args = func_get_args();
         $gens = toArray(map("toGen", $args));
-        while(all(function($gen){return $gen->valid();}, $gens)){    
+        while(all(function($gen){return $gen->valid();}, $gens)){
             yield toArray(map(function($x){return $x->current();}, $gens));
-            foreach($gens as $g){ 
+            foreach($gens as $g){
                 $g->next();
             }
         }
-    }    
+    }
 
     function zipWith($op, $a, $b){
         $g1 = toGen($a);
@@ -678,26 +676,27 @@ namespace F\list_{
             yield $op($g1->current(), $g2->current());
             $g1->next();
             $g2->next();
-        }    
-    }    
+        }
+    }
 
     function reverse($iterable){
         return reduce(function($a, $b){
             return extend($b, $a);
-        }, map("single", $iterable));  
-    }    
+        }, map("single", $iterable));
+    }
 
-    function reverse2($iterable){ return array_reverse(toArray($iterable)); }      
+    function reverse2($iterable){ return array_reverse(toArray($iterable)); }
 
     function noDoubles($iterable){
         $known = [];
         foreach($iterable as $x){
-            if(!hasElem($known, $x)) yield $x;
+            #if(!hasElem($known, $x)) yield $x;
+            if(!elem($x, $known)) yield $x;
         }
     }
- 
+
     #flatten array
-    
+
     //todo: make variadic
     function cartProd($ls, $xs){
         foreach($ls as $x){
@@ -705,7 +704,7 @@ namespace F\list_{
                 yield [$x, $y];
             }
         }
-    }      
+    }
 
     function take($n, $ls){
         foreach($ls as $x){
@@ -720,7 +719,7 @@ namespace F\list_{
             if($n<=0) yield $x;
             $n -= 1;
         }
-    }    
+    }
 
     function takeWhile($p, $iterable){
         foreach($iterable as $x){
@@ -737,18 +736,18 @@ namespace F\list_{
     }
 
     function tail($iterable){
-        $isFirst = true;    
+        $isFirst = true;
         foreach($iterable as $x){
             if($isFirst) $isFirst = false;
             else yield $x;
         }
     }
-    
+
     function filter($f, $iterable){
-        foreach($iterable as $x){   
+        foreach($iterable as $x){
             if($f($x)) yield $x;
         }
-    }    
+    }
 
     function map($f, $iterable){
         foreach($iterable as $x){
@@ -758,50 +757,50 @@ namespace F\list_{
 
     #folds
     function reduce($op, $iterable){
-        
+
         #if(is_string($op)) $op = str_replace("\t","\\t", str_replace("\n", "\\n", $op));
-        
-        
+
+
         $acc = head($iterable);
         foreach(tail($iterable) as $x){
-            $acc = $op($acc, $x); 
+            $acc = $op($acc, $x);
         }
         return $acc;
-    }   
+    }
 
     #use a queue genFunc for non copying!
-    
-    
+
+
     #use bidirectional gen + predicate to decide whats put back in the queue?
     function queue(){
         while(true){
             foreach($iterable as $x){
-                yield $x;  
-            } 
-        }        
-    }
-
-    #stack genFunc?
-    
-    
-    function cycle($iterable){ #todo: if somethings a gen : copy & exec copy
-        while(true){
-            foreach($iterable as $x){
-                #if(isGen($x)) $x->rewind();         
-
-                #yield copy($x)?
-                yield $x;  
-            } 
+                yield $x;
+            }
         }
     }
 
-    
+    #stack genFunc?
+
+
+    function cycle($iterable){ #todo: if somethings a gen : copy & exec copy
+        while(true){
+            foreach($iterable as $x){
+                #if(isGen($x)) $x->rewind();
+
+                #yield copy($x)?
+                yield $x;
+            }
+        }
+    }
+
+
     #repeat
-    
+
     #replicate
-    
-    
-    
+
+
+
 }
 
 //=============
@@ -816,15 +815,15 @@ namespace F\string{
     use F\list_ as L;
 
     function slice($i, $j, $s){ return mb_substr($s, $i, $j-$i+1); }
-    
-    
+
+
     #wrapper
     function add($a, $b){ return $a.$b; }
     function upper($s){ return mb_strtoupper($s, 'utf8'); }
     function lower($s){ return mb_strtolower($s, 'utf8'); }
     function length($s){ return mb_strlen($s, 'utf8'); }
 
-    
+
     function charList($s){ return preg_split('//u', $s, null, PREG_SPLIT_NO_EMPTY); }
 
     #todo: rewrite
@@ -835,28 +834,28 @@ namespace F\string{
         }
         return $acc;
     }
- 
+
     function hasSubstr($s, $ss){ return strpos($s, $ss) !== false; }
     function letters($s){ return L\noDoubles(charList($s)); }
-    
+
     #alternative haskell name? intersperse?
-    function sepBy($del, $s){ return implode($del, charList($s)); } 
+    function sepBy($del, $s){ return implode($del, charList($s)); }
 
     function charPos($s, $c){
         $rs = [];
         $len = length($s);
-        for($i = 0; $i < $len; $i++){ 
+        for($i = 0; $i < $len; $i++){
             if($s[$i] === $c) $rs[] = $i;
-        }    
+        }
         return $rs;
     }
 
     #cause implode doesnt know generators
     function join_($del, $ls){
         return L\reduce(function($a, $b)use($del){return $a.$del.$b;}, $ls);
-    }   
+    }
 
-    
+
     #split?
 
     #text module?
@@ -865,16 +864,17 @@ namespace F\string{
 
     #TODO create genericFunc that produces paires like lines & unlines
 
-    
+
     #todo: rewrite
     function unmask($s, $visibleLetters, $cover="_"){
         $retS = "";
         foreach(charList($s) as $c){
-            $retS .= L\hasElem($visibleLetters, $c) ? $c : $cover;
+            #$retS .= L\hasElem($visibleLetters, $c) ? $c : $cover;
+            $retS .= L\elem($c, $visibleLetters) ? $c : $cover;
         }
         return $retS;
-    }    
-    
+    }
+
     #Text
     function lines($s){ return explode("\n", $s); }
     function unlines($lines){ return join_("\n", $lines); }
@@ -882,7 +882,7 @@ namespace F\string{
         foreach($lines as $line){
             yield "\t".$line;
         }
-    }    
+    }
 
     #quotation
     function isQuoted($s){
@@ -891,7 +891,7 @@ namespace F\string{
         return false;
     }
     function unquote($s){ return slice(1, length($s)-2, $s); }
-    
+
 }
 
 #(def f (a b) (+ a b))
@@ -936,7 +936,7 @@ namespace F\io\file{
     #error_reporting(E_STRICT);
 
     #0777 means ?
-    
+
     function showPerm($path){ return decoct(fileperms($path) & 0777); }
     function hasPerm($path){ return 0755 === (fileperms($path) & 0777); }
     function exists($p){ return file_exists($p); }
@@ -968,12 +968,12 @@ namespace F\io\file{
     #generators for file reading?
     #and parsing?
     #or higher order funcs?
-    
-    
+
+
     #error case handling?
     function read($path){
         #$h = fopen($path, 'r');
-        
+
         #if(!$h) return null;
         #$c = fgets($h);
 
@@ -1045,8 +1045,8 @@ namespace F\io\dir{
             $ret[] = $path."/".$e;
         }
         return $ret;
-    }    
-    
+    }
+
 
 }
 
@@ -1142,7 +1142,7 @@ namespace F\mysql\table{
 
     function insert($con, $tableName, $dict){
         $fields = implode(',', D\keys($dict));
-        
+
         #todo: use toJSON?
         $values = substr(json_encode(D\values($dict)), 1, -1);
         return M\query($con, "INSERT INTO ".$tableName."(".$fields.") VALUES (".$values.")");
@@ -1168,7 +1168,7 @@ namespace F\mysql\table\select{
     #error_reporting(E_STRICT);
 
     //if(mysqli_num_rows($r) > 0){
-    
+
     function single($con, $tableName, $fields=["*"], $cond="true"){
         $r = mysqli_query($con, "SELECT ".implode(",", $fields)." FROM ".$tableName." WHERE ".$cond." ;");
         if(!is_bool($r)){
@@ -1361,7 +1361,7 @@ namespace F\prog{
     error_reporting(-1);
     #error_reporting(E_STRICT);
     use F\dict as D;
-    
+
     //onExit
     //register_shutdown_function
 
@@ -1371,14 +1371,14 @@ namespace F\prog{
     #a:
     #goto a;
 
-    
+
     #deprecate GET and change to post[json] only!
     #put jwt in header always!?
-    
+
     #$log = function($s){
     #    \F\io\file\appendLn("err.log", $s);
     #};
-    
+
     function microService($f, $log=null){
         if(is_null($log)) $log = function($s){};
         if(!empty($_POST) && isset($_POST["json"])){
