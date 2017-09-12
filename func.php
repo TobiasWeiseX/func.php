@@ -15,11 +15,13 @@
 //the right way to force errors?
 //https://secure.php.net/manual/de/errorfunc.constants.php
 
-
+//Errror handling:
+//http://de2.php.net/manual/en/errorfunc.configuration.php#ini.display-errors
 
 namespace F{
     error_reporting(-1);
     #error_reporting(E_STRICT);
+
     use F\list_ as L;
 
     #session_unset(); // remove all session variables
@@ -57,7 +59,8 @@ namespace F{
         assert('preg_match(\'/^([a-zA-Z_\x7f-\xff][\\\\\\\\a-zA-Z0-9_\x7f-\xff]*)?$/\', $source) > 0',
             "import_namespace(): '$destination' is not a valid namespace name");
         assert('preg_match(\'/^([a-zA-Z_\x7f-\xff][\\\\\\\\a-zA-Z0-9_\x7f-\xff]*)?$/\', $destination) > 0',
-            "import_namespace(): '$source' is not a valid namespace name");
+                "import_namespace(): '$source' is not a valid namespace name");
+
 
         foreach(get_declared_classes() as $class)
             if(strpos($class, $source . '\\') === 0)
@@ -660,7 +663,7 @@ namespace F\list_{
 
     function zip(){
         $args = func_get_args();
-        $gens = toArray(map("toGen", $args));
+        $gens = toArray(map(__NAMESPACE__."\\toGen", $args));
         while(all(function($gen){return $gen->valid();}, $gens)){
             yield toArray(map(function($x){return $x->current();}, $gens));
             foreach($gens as $g){
@@ -682,7 +685,7 @@ namespace F\list_{
     function reverse($iterable){
         return reduce(function($a, $b){
             return extend($b, $a);
-        }, map("single", $iterable));
+        }, map(__NAMESPACE__."\\single", $iterable));
     }
 
     function reverse2($iterable){ return array_reverse(toArray($iterable)); }
@@ -757,10 +760,7 @@ namespace F\list_{
 
     #folds
     function reduce($op, $iterable){
-
         #if(is_string($op)) $op = str_replace("\t","\\t", str_replace("\n", "\\n", $op));
-
-
         $acc = head($iterable);
         foreach(tail($iterable) as $x){
             $acc = $op($acc, $x);
