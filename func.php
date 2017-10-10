@@ -2,13 +2,11 @@
 //==========================================
 //				func.php
 //==========================================
-//functional Programming with php
 //@Author: Tobias Weise
 //@License: BSD3
 //https://opensource.org/licenses/BSD-3-Clause
-//sister library to func.js
 
-//TODO: Write the manifest laying out all the desgin prinicples used for the lib!
+
 //use namespaces for shorter funcnames & performance/jit-opcode-compilation
 //way to set strict mode globally?
 
@@ -521,6 +519,8 @@ namespace F\list_{
         return null;
     }
 
+    #return array_values(array_slice($ls, -1))[0];
+
     function last($iterable){
         if(is_array($iterable)) return $iterable[count($iterable)-1];
         $r = null;
@@ -746,6 +746,15 @@ namespace F\list_{
         }
     }
 
+    function init($iterable){
+        $i = length($iterable);
+        foreach($iterable as $x){
+            if($i < 2) break;
+            yield $x;
+            $i -= 1;
+        }
+    }
+
     function filter($f, $iterable){
         foreach($iterable as $x){
             if($f($x)) yield $x;
@@ -815,13 +824,20 @@ namespace F\string{
     use F\list_ as L;
 
     function slice($i, $j, $s){ return mb_substr($s, $i, $j-$i+1); }
-
-
-    #wrapper
     function add($a, $b){ return $a.$b; }
     function upper($s){ return mb_strtoupper($s, 'utf8'); }
     function lower($s){ return mb_strtolower($s, 'utf8'); }
     function length($s){ return mb_strlen($s, 'utf8'); }
+
+
+    function head($s){ return $s[0]; }
+    function tail($s){ return slice(1, length($s)-1, $s); }
+
+    #untested
+    function uncons($s){
+        return [head($s), tail($s)];
+    }
+
 
 
     function charList($s){ return preg_split('//u', $s, null, PREG_SPLIT_NO_EMPTY); }
@@ -911,7 +927,6 @@ namespace F\regex{
 
     #$regex = '#<a [^>]*href="(.)*"[^>]*>(.*)</a>#';
     #create predicate from regex?
-
 
     function findAll($rgx, $txt){
         $rs = [];
