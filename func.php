@@ -943,6 +943,8 @@ namespace F\io{
     error_reporting(-1);
     #error_reporting(E_STRICT);
 
+    ini_set('user_agent', 'Mozilla/5.0 (Windows; U; Windows NT 6.0; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3');
+
     function readUrl($url){ return file_get_contents($url); }
 }
 
@@ -999,12 +1001,12 @@ namespace F\io\file{
     }
 
     function readBin($path){
-        $h = fopen($path, 'rb');
-        $c = fgets($h); #read only 1 line
-        #-> loop here
+        $h = fopen($path, "rb");
+        $c = stream_get_contents($h);
         fclose($h);
         return $c;
     }
+
 
     function createIfNotExists($path){
         if(!exists($path)){
@@ -1337,6 +1339,53 @@ namespace F\pdf\thumbnail{
 
 //hashing
 //Sha1 md5
+
+
+
+//=============
+//DOM
+//=============
+
+
+
+namespace F\dom{
+    error_reporting(-1);
+    #error_reporting(E_STRICT);
+
+    function getInnerHTML($node){
+         $body = $node->ownerDocument->documentElement->firstChild->firstChild;
+         $doc = new DOMDocument();
+         $doc->appendChild($doc->importNode($body,true));
+         return $doc->saveHTML();
+    }
+
+    function traverseDOM($ele, $f){
+        if($ele->nodeType === XML_ELEMENT_NODE){
+            $f($ele);
+            if($ele->hasChildNodes()){
+                foreach($ele->childNodes as $ele2){
+                    traverseDOM($ele2, $f);
+                }
+            }
+
+        }
+    }
+
+    function getElementsByClassName($root, $clsName){
+        $rs = [];
+        traverseDOM($root, function($ele) use (&$rs, $clsName){
+            if($ele->hasAttribute("class")){
+                $parts = explode(" ", $ele->getAttribute("class"));
+                if(in_Array($clsName, $parts)) $rs[] = $ele;
+            }
+
+        });
+        return $rs;
+    }
+
+}
+
+
 
 
 
