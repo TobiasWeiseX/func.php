@@ -838,6 +838,68 @@ namespace F\string{
         return [head($s), tail($s)];
     }
 
+    //https://stackoverflow.com/questions/3786003/str-replace-on-multibyte-strings-dangerous
+
+    //http://iamseanmurphy.com/mb-str-replace-the-missing-php-function/
+
+    /*
+    function mb_replace($search, $replace, $subject, &$count=0) {
+        if (!is_array($search) && is_array($replace)) {
+            return false;
+        }
+        if (is_array($subject)) {
+            // call mb_replace for each single string in $subject
+            foreach ($subject as &$string) {
+                $string = &mb_replace($search, $replace, $string, $c);
+                $count += $c;
+            }
+        } elseif (is_array($search)) {
+            if (!is_array($replace)) {
+                foreach ($search as &$string) {
+                    $subject = mb_replace($string, $replace, $subject, $c);
+                    $count += $c;
+                }
+            } else {
+                $n = max(count($search), count($replace));
+                while ($n--) {
+                    $subject = mb_replace(current($search), current($replace), $subject, $c);
+                    $count += $c;
+                    next($search);
+                    next($replace);
+                }
+            }
+        } else {
+            $parts = mb_split(preg_quote($search), $subject);
+            $count = count($parts)-1;
+            $subject = implode($replace, $parts);
+        }
+        return $subject;
+    }
+    */
+
+
+#if (!function_exists('mb_str_replace')) {
+	function mb_str_replace($search, $replace, $subject, &$count = 0) {
+		if (!is_array($subject)) {
+			// Normalize $search and $replace so they are both arrays of the same length
+			$searches = is_array($search) ? array_values($search) : array($search);
+			$replacements = is_array($replace) ? array_values($replace) : array($replace);
+			$replacements = array_pad($replacements, count($searches), '');
+			foreach ($searches as $key => $search) {
+				$parts = mb_split(preg_quote($search), $subject);
+				$count += count($parts) - 1;
+				$subject = implode($replacements[$key], $parts);
+			}
+		} else {
+			// Call mb_str_replace for each subject in array, recursively
+			foreach ($subject as $key => $value) {
+				$subject[$key] = mb_str_replace($search, $replace, $value, $count);
+			}
+		}
+		return $subject;
+	}
+#}
+
 
 
     function charList($s){ return preg_split('//u', $s, null, PREG_SPLIT_NO_EMPTY); }
@@ -1484,9 +1546,23 @@ namespace F\prog{
         }
         catch(Exception $e){
             $log(''.$e);
+            #untested
+
+
+            $r = ["error" => [
+                "code" => $e->getCode(),
+                "message" => $e->getMessage(),
+                "line" => $e->getLine(),
+                "file" => $e->getFile(),
+                "trace" => $e->getTraceAsString()
+            ]];
+
+
+            #$r = $e;
         }
         ob_end_clean();
         header('Content-Type: application/json');
+        header('Access-Control-Allow-Origin: *');
         echo utf8_encode(\F\toJSON($r));
         exit(0);
     }
