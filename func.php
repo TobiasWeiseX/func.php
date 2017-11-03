@@ -977,6 +977,22 @@ namespace F\string{
     }
     function unquote($s){ return slice(1, length($s)-2, $s); }
 
+
+    function replicateStr($n, $s){
+        $r = "";
+        for($i=0; $i<$n; $i++){
+            $r += $s;
+        }
+        return $r;
+    }
+
+    function fillInFront($char, $len, $x){
+        $s = $x."";
+        $l = length($s);
+        return ($l<$len ? replicateStr($len-$l, $char) : "").$s;
+    }
+
+
 }
 
 #(def f (a b) (+ a b))
@@ -1006,6 +1022,30 @@ namespace F\regex{
 }
 
 //=============
+//Time
+//=============
+
+namespace F\time{
+    error_reporting(-1);
+    #error_reporting(E_STRICT);
+
+    use F\string as S;
+
+    function yearShort($x){
+        return S\slice(2,4, $x); //2016 -> 16
+    }
+
+    function weekNumber(){
+        $ddate = date('Y-m-d H:i:s');
+        #$ddate = "2012-10-18";
+        $date = new \DateTime($ddate);
+        $week = $date->format("W");
+        return $week;
+    }
+
+}
+
+//=============
 //IO
 //=============
 namespace F\io{
@@ -1015,6 +1055,14 @@ namespace F\io{
     ini_set('user_agent', 'Mozilla/5.0 (Windows; U; Windows NT 6.0; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3');
 
     function readUrl($url){ return file_get_contents($url); }
+
+
+    function download($url, $path){
+        $c = file_get_contents($url);
+        file_put_contents($path, $c);
+    }
+
+
 }
 
 namespace F\io\file{
@@ -1475,6 +1523,42 @@ namespace F\css{
     }
 
 }
+
+
+
+//=============
+//Sqlite3
+//=============
+
+namespace F\sqlite{
+    error_reporting(-1);
+    #error_reporting(E_STRICT);
+
+    use F\string as S;
+
+    function js2sql($x){
+        switch(gettype($x)){
+            case "integer": return "".$x;
+            case "double": return "".$x;
+            case "string": return "'".S\replace("'", "\\'", $x)."'";
+
+            #case "string": return "'".S\replace("'", "'", $x)."'";
+        }
+    }
+
+    function createTable($db, $name, $obj){
+        $ls = [];
+        foreach($obj as $k => $v){
+            $ls[] = $k." ".$v;
+        }
+        return $db->query("CREATE TABLE IF NOT EXISTS ".$name." (".S\join_(",", $ls).")");
+    }
+
+}
+
+
+
+
 
 //=======================================
 //Feed/OnePager/Microservice/RPC-Sever
