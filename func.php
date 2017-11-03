@@ -901,6 +901,13 @@ namespace F\string{
 #}
 
 
+    function replace($old, $new, $s){
+        return mb_str_replace($old, $new, $s);
+    }
+
+
+
+
 
     function charList($s){ return preg_split('//u', $s, null, PREG_SPLIT_NO_EMPTY); }
 
