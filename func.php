@@ -356,6 +356,7 @@ namespace F\func{
         };
     }
 
+
     function getFuncArgs($funcName){
         #$properties = $reflector->getProperties();
         $refFunc = new ReflectionFunction($funcName);
@@ -1361,7 +1362,6 @@ namespace F\image{
     use F\list_ as L;
 
     function resizeImage($path, $new_path, $width, $height){
-        #echo $path;
 	    #$ext = path_to_ext($path);
         $ext = strtolower(L\last(explode(".", $path)));
         $filename = $path;
@@ -1503,10 +1503,6 @@ namespace F\dom{
 }
 
 
-
-
-
-
 //=============
 //CSS
 //=============
@@ -1636,6 +1632,7 @@ namespace F\prog{
             $r = call_user_func($f, $jsonV);
         }
         catch(Exception $e){
+            #todo: let $log handle the exception
             $log(''.$e);
             #untested
 
