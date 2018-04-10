@@ -7,6 +7,7 @@
 //https://opensource.org/licenses/BSD-3-Clause
 
 
+
 //use namespaces for shorter funcnames & performance/jit-opcode-compilation
 //way to set strict mode globally?
 
@@ -124,8 +125,22 @@ namespace F{
 
     #utf8 strings r ideal!
     function fromJSON($s){
-        if(!is_string($s)) throw new Exception("Parse value must be string!");
-        return json_decode($s, true);
+        if(!is_string($s)) throw new \Exception("Parse value must be string!");
+        $retVal = json_decode($s, true);
+        $errCode = json_last_error();
+        if($errCode !== JSON_ERROR_NONE){
+            switch($errCode){
+                case JSON_ERROR_DEPTH:          throw new \Exception("Max Stackdepth reached");
+                case JSON_ERROR_STATE_MISMATCH: throw new \Exception("State/Mode mismatch!");
+                case JSON_ERROR_CTRL_CHAR:      throw new \Exception("Unexpected control char found!");
+                case JSON_ERROR_SYNTAX:         throw new \Exception("Syntaxerror, invalid JSON!");
+                case JSON_ERROR_UTF8:           throw new \Exception("Malformed UTF-8 char, possibly faulty decoded");
+                default:                        throw new \Exception("Unknown error!");
+            }
+        }
+        else{
+            return $retVal;
+        }
     }
 
     function echoJSON($s){ echo toJSON($s); }
@@ -267,6 +282,12 @@ namespace F\number{
     function add($a, $b){ return $a + $b; }
     function sub($a, $b){ return $a - $b; }
     function multi($a, $b){ return $a * $b; }
+
+
+    function randInt($min, $max){ return rand($min, $max); }
+
+
+
 }
 
 //=============
@@ -309,15 +330,26 @@ namespace F\func{
     function isFunc($f){ return function_exists($f); }
 
     #disable Echoing!
+    #function silent($f){
+    #    return function() use (&$f){
+    #        $args = func_get_args();
+    #        ob_start();
+    #        $r = call_user_func($f, $args);
+    #        ob_end_clean();
+    #        return $r;
+    #    };
+    #}
+
     function silent($f){
-        return function() use (&$f){
-            $args = func_get_args();
+        return function(...$args) use (&$f){
             ob_start();
-            $r = call_user_func($f, $args);
+            $r = $f(...$args);
             ob_end_clean();
             return $r;
         };
     }
+
+
 
     #todo: make work!
     function isGenFunc($f){
@@ -327,23 +359,36 @@ namespace F\func{
             #}
             #else return false;
         }
-        catch(ReflectionException $e){
+        catch(\ReflectionException $e){
             return false;
         }
         #return $f instanceof Generator;
     }
 
+    #function compose(&$f, &$g){
+    #    return function() use($f,$g){
+    #        return $f(call_user_func_array($g, func_get_args()));
+    #    };
+    #}
+
     function compose(&$f, &$g){
-        return function() use($f,$g){
-            return $f(call_user_func_array($g, func_get_args()));
+        return function(...$args) use($f,$g){
+            return $f($g(...$args));
         };
     }
 
-    function comp(){
-        $fs = func_get_args();
+    #function comp(){
+    #    $fs = func_get_args();
+    #    $f = L\reduce(__NAMESPACE__."\compose", $fs);
+    #    return $f;
+    #}
+
+    function comp(...$fs){
         $f = L\reduce(__NAMESPACE__."\compose", $fs);
         return $f;
     }
+
+
 
     #doesnt work:
     #$f = F\func\variadicOp("F\number\add", "F\func\iden");
@@ -1057,7 +1102,7 @@ namespace F\io{
 
     function readUrl($url){ return file_get_contents($url); }
 
-
+    #error handling?
     function download($url, $path){
         $c = file_get_contents($url);
         file_put_contents($path, $c);
@@ -1076,26 +1121,32 @@ namespace F\io\file{
     function hasPerm($path){ return 0755 === (fileperms($path) & 0777); }
     function exists($p){ return file_exists($p); }
 
+    function getFileHandle($path, $mode){
+        $f = fopen($path, $mode);
+        if($f) return $f;
+        else throw new \Exception("Unable to open file! (".$path.") in ".$mode."-mode !");
+    }
+
     function write($path, $c){
-        $f = fopen($path, 'w');
+        $f = getFileHandle($path, "w");
         fwrite($f, $c);
         fclose($f);
     }
 
     function writeBin($path, $c){
-        $f = fopen($path, 'wb');
+        $f = getFileHandle($path, "wb");
         fwrite($f, $c);
         fclose($f);
     }
 
     function append($path, $c){
-        $f = fopen($path, 'a');
+        $f = getFileHandle($path, "a");
         fwrite($f, $c);
         fclose($f);
     }
 
     function appendLn($path, $c){
-        $f = fopen($path, 'a');
+        $f = getFileHandle($path, "a");
         fwrite($f, $c."\n");
         fclose($f);
     }
@@ -1103,6 +1154,14 @@ namespace F\io\file{
     #generators for file reading?
     #and parsing?
     #or higher order funcs?
+
+    function readBin($path){
+        #$h = fopen($path, "rb");
+        $h = getFileHandle($path, "rb");
+        $c = stream_get_contents($h);
+        fclose($h);
+        return $c;
+    }
 
 
     #error case handling?
@@ -1118,12 +1177,7 @@ namespace F\io\file{
         return file_get_contents($path);
     }
 
-    function readBin($path){
-        $h = fopen($path, "rb");
-        $c = stream_get_contents($h);
-        fclose($h);
-        return $c;
-    }
+
 
 
     function createIfNotExists($path){
@@ -1484,7 +1538,6 @@ namespace F\dom{
                     traverseDOM($ele2, $f);
                 }
             }
-
         }
     }
 
@@ -1495,7 +1548,6 @@ namespace F\dom{
                 $parts = explode(" ", $ele->getAttribute("class"));
                 if(in_Array($clsName, $parts)) $rs[] = $ele;
             }
-
         });
         return $rs;
     }
@@ -1592,36 +1644,41 @@ namespace F\prog{
     #    \F\io\file\appendLn("err.log", $s);
     #};
 
-    function microService($f, $log=null){
+    function exception2obj($e){
+        return ["error" => [
+            "code" => $e->getCode(),
+            "message" => $e->getMessage(),
+            "line" => $e->getLine(),
+            "file" => $e->getFile(),
+            "trace" => $e->getTraceAsString()
+        ]];
+    }
+
+
+
+
+    function microService($f, $log=null, $catchAll=true){
+        ini_set('display_errors', 1);
         if(is_null($log)) $log = function($s){};
+
+        if($catchAll){
+            set_error_handler(function($errno, $errstr, $errfile, $errline, $errcontext ) use (&$log){
+                if($errno === E_USER_WARNING || $errno === E_USER_NOTICE){
+                    $log($errstr);
+                }
+                else{
+                    throw new \ErrorException($errstr, $errno, 0, $errfile, $errline);
+                }
+            });
+        }
+
         if(!empty($_POST) && isset($_POST["json"])){
-            $jsonV = \F\fromJSON($_POST["json"]);
-            switch(json_last_error()){
-                case JSON_ERROR_NONE: break;
-                case JSON_ERROR_DEPTH:
-                    $log("Max Stackdepth reached");
-                    $jsonV = [];
-                    break;
-                case JSON_ERROR_STATE_MISMATCH:
-                    $log("State/Mode mismatch!");
-                    $jsonV = [];
-                    break;
-                case JSON_ERROR_CTRL_CHAR:
-                    $log("Unexpected control char found!");
-                    $jsonV = [];
-                    break;
-                case JSON_ERROR_SYNTAX:
-                    $log("Syntaxerror, invalid JSON!");
-                    $jsonV = [];
-                    break;
-                case JSON_ERROR_UTF8:
-                    $log("Malformed UTF-8 char, possibly faulty decoded");
-                    $jsonV = [];
-                    break;
-                default:
-                    $log("Unknown error!");
-                    $jsonV = [];
-                    break;
+            try{
+                $jsonV = \F\fromJSON($_POST["json"]);
+            }
+            catch(\Throwable $e){
+                $log($e->toString());
+                $jsonV = [];
             }
         }
         else{
@@ -1629,24 +1686,12 @@ namespace F\prog{
         }
         ob_start();
         try{
-            $r = call_user_func($f, $jsonV);
+            #$r = call_user_func($f, $jsonV);
+            $r = $f($jsonV);
         }
-        catch(Exception $e){
-            #todo: let $log handle the exception
+        catch(\Throwable $e){
             $log(''.$e);
-            #untested
-
-
-            $r = ["error" => [
-                "code" => $e->getCode(),
-                "message" => $e->getMessage(),
-                "line" => $e->getLine(),
-                "file" => $e->getFile(),
-                "trace" => $e->getTraceAsString()
-            ]];
-
-
-            #$r = $e;
+            $r = exception2obj($e);
         }
         ob_end_clean();
         header('Content-Type: application/json');
@@ -1654,7 +1699,6 @@ namespace F\prog{
         echo utf8_encode(\F\toJSON($r));
         exit(0);
     }
-
 
 }
 
