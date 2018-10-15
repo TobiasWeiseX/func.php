@@ -1570,6 +1570,42 @@ namespace F\css{
         }
     }
 
+    #cssClass as dict
+
+    function cssClass($name, $d, $protoClass=[]){
+        $attrs = [];
+        foreach($protoClass as $protoName => $protoAttrs){
+            $attrs = $protoAttrs;
+        }
+        foreach($d as $k => $v){
+            $attrs[$k] = $v;
+        }
+        return [$name => $attrs];
+    }
+
+    function showCssClass($cls){
+        $name = "";
+        $vals = [];
+        foreach($cls as $k => $v){
+            $name = $k;
+            $vals = $v;
+        }
+        $ls = [];
+        foreach($vals as $k => $v){
+            $ls[] = $k.": ".$v.";";
+        }
+        return ".".$name."{".implode("\n",$ls)."}";
+    }
+
+    /*$wrapper = cssClass("wrapper", [
+        "width" => "100%",
+        "height" => "100%",
+        "display" => "grid",
+        "grid-template-columns" => "repeat(2, 1fr)",
+        "grid-gap" => "0px",
+        "grid-auto-rows" => "minmax(100px, auto)"
+    ]);*/
+
 }
 
 
@@ -1589,7 +1625,6 @@ namespace F\sqlite{
             case "integer": return "".$x;
             case "double": return "".$x;
             case "string": return "'".S\replace("'", "\\'", $x)."'";
-
             #case "string": return "'".S\replace("'", "'", $x)."'";
         }
     }
@@ -1603,9 +1638,6 @@ namespace F\sqlite{
     }
 
 }
-
-
-
 
 
 //=======================================
@@ -1653,9 +1685,6 @@ namespace F\prog{
             "trace" => $e->getTraceAsString()
         ]];
     }
-
-
-
 
     function microService($f, $log=null, $catchAll=true){
         ini_set('display_errors', 1);
