@@ -5,11 +5,7 @@
 //@Author: Tobias Weise
 //@License: BSD3
 //https://opensource.org/licenses/BSD-3-Clause
-
-
-
-//use namespaces for shorter funcnames & performance/jit-opcode-compilation
-//way to set strict mode globally?
+//supports only php7+
 
 //the right way to force errors?
 //https://secure.php.net/manual/de/errorfunc.constants.php
@@ -18,80 +14,10 @@
 //http://de2.php.net/manual/en/errorfunc.configuration.php#ini.display-errors
 
 namespace F{
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
+    error_reporting(E_STRICT);
 
     use F\list_ as L;
 
-    #session_unset(); // remove all session variables
-    #session_destroy();  // destroy the session
-
-    #todo: rewrite
-    function function_alias($original, $alias){
-        $args = func_get_args();
-        assert('count($args) == 2', 'function_alias(): requires exactly two arguments');
-        assert('is_string($original) && is_string($alias)', 'function_alias(): requires string arguments');
-        // valid function name - http://php.net/manual/en/functions.user-defined.php
-        assert('preg_match(\'/^[a-zA-Z_\x7f-\xff][\\\\\\\\a-zA-Z0-9_\x7f-\xff]*$/\', $original) > 0',
-            "function_alias(): '$original' is not a valid function name");
-        assert('preg_match(\'/^[a-zA-Z_\x7f-\xff][\\\\\\\\a-zA-Z0-9_\x7f-\xff]*$/\', $alias) > 0',
-            "function_alias(): '$alias' is not a valid function name");
-        $aliasNamespace = substr($alias, 0, strrpos($alias, '\\') !== false ? strrpos($alias, '\\') : 0);
-        $aliasName = substr($alias, strrpos($alias, '\\') !== false ? strrpos($alias, '\\') + 1 : 0);
-        $serializedOriginal = var_export($original, true);
-        eval("
-            namespace $aliasNamespace {
-                function $aliasName () {
-                    return call_user_func_array($serializedOriginal, func_get_args());
-                }
-            }
-        ");
-    }
-
-    #todo: rewrite
-    function import_namespace($source, $destination){
-        $args = func_get_args();
-        assert('count($args) == 2', 'import_namespace(): requires exactly two arguments');
-        assert('is_string($source) && is_string($destination)', 'import_namespace(): requires string arguments');
-
-        //valid function name - http://php.net/manual/en/functions.user-defined.php
-        assert('preg_match(\'/^([a-zA-Z_\x7f-\xff][\\\\\\\\a-zA-Z0-9_\x7f-\xff]*)?$/\', $source) > 0',
-            "import_namespace(): '$destination' is not a valid namespace name");
-        assert('preg_match(\'/^([a-zA-Z_\x7f-\xff][\\\\\\\\a-zA-Z0-9_\x7f-\xff]*)?$/\', $destination) > 0',
-                "import_namespace(): '$source' is not a valid namespace name");
-
-
-        foreach(get_declared_classes() as $class)
-            if(strpos($class, $source . '\\') === 0)
-                class_alias($class, $destination . ($destination ? '\\' : '') . substr($class, strlen($source . '\\')));
-
-        $functions = get_defined_functions();
-        foreach(array_merge($functions['internal'], $functions['user']) as $function)
-            if (strpos($function, $source . '\\') === 0)
-                function_alias($function, $destination . ($destination ? '\\' : '') . substr($function, strlen($source . '\\')));
-    }
-
-    function use_namespace($src){ import_namespace($src, __NAMESPACE__); }
-
-    #fix replaces the auto-currying-mechanism!
-
-    #if(version_compare(PHP_VERSION, '5.6.0', '>=')){
-    #    function fix($f, ...$args){
-    #        return function(...$args2) use(&$f, &$args){
-    #            return $f(...$args, ...$args2);
-    #        };
-    #    }
-    #}
-    #else{
-
-
-
-    #get_defined_vars();
-    #phpinfo();
-
-    #todo:
-    #$inc = F\fix("add", 1);
-    #move to F
     function fix(){
         list($f, $args) = func_get_args();
         if(is_string($f)) $f = str_replace("\t","\\t", str_replace("\n", "\\n", $f)); #escape namespace path
@@ -99,18 +25,6 @@ namespace F{
             return call_user_func_array($f, array_merge($args, func_get_args()));
         };
     }
-    #}
-
-    #__FILE__ – The full path and filename of the file.
-    #__DIR__ – The directory of the file.
-    #__CLASS__ – The class name.
-    #__METHOD__ – The class method name.
-    #__LINE__ – The current line number of the file.
-    #
-    #__FUNCTION__ – The function name.
-    #__NAMESPACE__ – The name of the current namespace
-
-
 
     #polymorphic funcs?
     function equal($a, $b){ return $a === $b; }
@@ -153,25 +67,6 @@ namespace F{
         return [$r, $t2-$t1];
     }
 
-    /*
-    public function __call($method, $arguments) {
-        $arguments = array_merge(array("stdObject" => $this), $arguments); // Note: method argument 0 will always referred to the main class ($this).
-        if (isset($this->{$method}) && is_callable($this->{$method})) {
-            return call_user_func_array($this->{$method}, $arguments);
-        } else {
-            throw new Exception("Fatal error: Call to undefined method stdObject::{$method}()");
-        }
-    }
-    */
-
-
-    #$this->{$property} = $argument;
-    #!is_callable($f)
-    #memory_get_usage()
-    #is_array
-
-
-
     #mimic JS-obj literals!
     #ArrayWrapperClass -> as Map keys / Set values!
     function newObj($d){
@@ -181,7 +76,6 @@ namespace F{
         }
         return $obj;
     }
-
 
     #todo: constructor args : list
     #non-Object types?
@@ -258,8 +152,7 @@ namespace F{
 //Boolean
 //=============
 namespace F\bool{
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
+    error_reporting(E_STRICT);
 
     function not($x){ return !$x; }
     function and_($a, $b){ return $a && $b; }
@@ -270,8 +163,7 @@ namespace F\bool{
 //Number
 //=============
 namespace F\number{
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
+    error_reporting(E_STRICT);
 
     function smaller($a, $b){ return $a < $b; }
     function bigger($a, $b){ return $a > $b; }
@@ -295,8 +187,7 @@ namespace F\number{
 //=============
 namespace F\tuple{
     #http://hackage.haskell.org/package/base-4.8.1.0/docs/Data-Tuple.html
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
+    error_reporting(E_STRICT);
 
     function fst($iterable){
         list($a, $b) = $iterable;
@@ -320,8 +211,7 @@ namespace F\tuple{
 //=============
 
 namespace F\func{
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
+    error_reporting(E_STRICT);
     use F\list_ as L;
 
     function iden($x){ return $x; }
@@ -330,16 +220,6 @@ namespace F\func{
     function isFunc($f){ return function_exists($f); }
 
     #disable Echoing!
-    #function silent($f){
-    #    return function() use (&$f){
-    #        $args = func_get_args();
-    #        ob_start();
-    #        $r = call_user_func($f, $args);
-    #        ob_end_clean();
-    #        return $r;
-    #    };
-    #}
-
     function silent($f){
         return function(...$args) use (&$f){
             ob_start();
@@ -348,8 +228,6 @@ namespace F\func{
             return $r;
         };
     }
-
-
 
     #todo: make work!
     function isGenFunc($f){
@@ -365,30 +243,16 @@ namespace F\func{
         #return $f instanceof Generator;
     }
 
-    #function compose(&$f, &$g){
-    #    return function() use($f,$g){
-    #        return $f(call_user_func_array($g, func_get_args()));
-    #    };
-    #}
-
     function compose(&$f, &$g){
         return function(...$args) use($f,$g){
             return $f($g(...$args));
         };
     }
 
-    #function comp(){
-    #    $fs = func_get_args();
-    #    $f = L\reduce(__NAMESPACE__."\compose", $fs);
-    #    return $f;
-    #}
-
     function comp(...$fs){
         $f = L\reduce(__NAMESPACE__."\compose", $fs);
         return $f;
     }
-
-
 
     #doesnt work:
     #$f = F\func\variadicOp("F\number\add", "F\func\iden");
@@ -401,7 +265,6 @@ namespace F\func{
         };
     }
 
-
     function getFuncArgs($funcName){
         #$properties = $reflector->getProperties();
         $refFunc = new ReflectionFunction($funcName);
@@ -410,72 +273,13 @@ namespace F\func{
         }
     }
 
-    #ReflectionFunction
-    #getStaticVariables
-    #getNumberOfRequiredParameters
-    #getNumberOfParameters
-    #inNamespace
-    #isInternal
-    #isUserDefined
-
-
-    /*
-    #Y-combinator
-    function fix( $func ){
-        return function() use ( $func ){
-            $args = func_get_args();
-            array_unshift( $args, fix($func) );
-            return call_user_func_array( $func, $args );
-        };
-    }
-
-    $factorial = function( $func, $n ) {
-        if ( $n == 1 ) return 1;
-        return $func( $n - 1 ) * $n;
-    };
-    $factorial = fix( $factorial );
-
-    print $factorial( 5 );
-
-    */
-
-    #MEMOIZATION DECO
-
-    /*
-    function get_static_rand() {
-        static $rand = null;
-        if(is_null($rand)) {
-            $rand = rand();
-        }
-        return $rand;
-    }
-    echo get_static_rand(); // 985873932
-
-    echo "<br><br>";
-
-    echo get_static_rand(); // 985873932
-    */
-
-
-    /*
-    function fac($n){
-        static $mem = null;
-        if($n === 0){
-            #if(is_null($mem)) $mem
-            return 1;
-        }
-        return $n * fac($n - 1);
-    }
-    */
-
 }
 
 //=============
 //Dictionary
 //=============
 namespace F\dict{
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
+    error_reporting(E_STRICT);
 
     #null as universal NaN value?
 
@@ -506,7 +310,7 @@ namespace F\dict{
         };
     }
 
-    #todo: Set based version
+    #TODO: Set based version
     function groupBy($f, $ls){
         $d = [];
         foreach($ls as $x){
@@ -534,16 +338,11 @@ namespace F\dict{
 
 }
 
-
-#decompose funcs <-> comp
-
-
 //=============
 //List
 //=============
 namespace F\list_{
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
+    error_reporting(E_STRICT);
     #http://hackage.haskell.org/package/base-4.8.1.0/docs/Data-List.html
 
     function single($x){ return [$x]; }
@@ -837,12 +636,10 @@ namespace F\list_{
 
     #stack genFunc?
 
-
     function cycle($iterable){ #todo: if somethings a gen : copy & exec copy
         while(true){
             foreach($iterable as $x){
                 #if(isGen($x)) $x->rewind();
-
                 #yield copy($x)?
                 yield $x;
             }
@@ -854,19 +651,16 @@ namespace F\list_{
 
     #replicate
 
-
-
 }
 
 //=============
 //String
 //=============
 
-#todo: use mb/multibyte string funcs only!
+#TODO: use mb/multibyte string funcs only!
 
 namespace F\string{
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
+    error_reporting(E_STRICT);
     use F\list_ as L;
 
     function slice($i, $j, $s){ return mb_substr($s, $i, $j-$i+1); }
@@ -952,9 +746,6 @@ namespace F\string{
     }
 
 
-
-
-
     function charList($s){ return preg_split('//u', $s, null, PREG_SPLIT_NO_EMPTY); }
 
     #todo: rewrite
@@ -1038,22 +829,13 @@ namespace F\string{
         return ($l<$len ? replicateStr($len-$l, $char) : "").$s;
     }
 
-
-}
-
-#(def f (a b) (+ a b))
-#todo: S-Expr module
-namespace F\sexpr{
-    error_reporting(-1);
-
 }
 
 //=============
 //Regex
 //=============
 namespace F\regex{
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
+    error_reporting(E_STRICT);
 
 
     #$regex = '#<a [^>]*href="(.)*"[^>]*>(.*)</a>#';
@@ -1072,9 +854,7 @@ namespace F\regex{
 //=============
 
 namespace F\time{
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
-
+    error_reporting(E_STRICT);
     use F\string as S;
 
     function yearShort($x){
@@ -1095,8 +875,7 @@ namespace F\time{
 //IO
 //=============
 namespace F\io{
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
+    error_reporting(E_STRICT);
 
     ini_set('user_agent', 'Mozilla/5.0 (Windows; U; Windows NT 6.0; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3');
 
@@ -1112,8 +891,7 @@ namespace F\io{
 }
 
 namespace F\io\file{
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
+    error_reporting(E_STRICT);
 
     #0777 means ?
 
@@ -1121,6 +899,7 @@ namespace F\io\file{
     function hasPerm($path){ return 0755 === (fileperms($path) & 0777); }
     function exists($p){ return file_exists($p); }
 
+    #rename to open?
     function getFileHandle($path, $mode){
         $f = fopen($path, $mode);
         if($f) return $f;
@@ -1177,9 +956,6 @@ namespace F\io\file{
         return file_get_contents($path);
     }
 
-
-
-
     function createIfNotExists($path){
         if(!exists($path)){
             write($path,"");
@@ -1190,8 +966,7 @@ namespace F\io\file{
 }
 
 namespace F\io\dir{
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
+    error_reporting(E_STRICT);
 
     function cwd(){ return getcwd(); }
 
@@ -1212,7 +987,7 @@ namespace F\io\dir{
             mkdir($path);
             return is_dir($path);
         }
-        else return true;
+        return true;
     }
 
     function preg_ls ($path=".", $rec=false, $pat="/.*/") {
@@ -1240,26 +1015,22 @@ namespace F\io\dir{
 }
 
 namespace F\io\path{
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
+    error_reporting(E_STRICT);
 
     use F\list_ as L;
 
-    function ext($path){ return strtolower(L\last(explode(".", $path))); }
+    function ext($path){
+        return strtolower(L\last(explode(".", $path)));
+    }
 
 }
 
 //=============
 //mysql
 //=============
-#only use standard sql? rename to sql?
+#TODO: only use standard sql? rename to sql?
 namespace F\mysql{
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
-
-    //echo dirname(__FILE__);
-    #echo __FILE__;
-    #@register_shutdown_function(mysql_close);
+    error_reporting(E_STRICT);
 
     function query($con, $sql){ return mysqli_query($con, $sql); }
 
@@ -1276,15 +1047,12 @@ namespace F\mysql{
 }
 
 namespace F\mysql\types{
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
-
+    error_reporting(E_STRICT);
     define(__NAMESPACE__."\\Integer","INTEGER");
 }
 
 namespace F\mysql\table{
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
+    error_reporting(E_STRICT);
 
     use F\mysql as M;
     use F\list_ as L;
@@ -1353,8 +1121,7 @@ namespace F\mysql\table{
 }
 
 namespace F\mysql\table\select{
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
+    error_reporting(E_STRICT);
 
     //if(mysqli_num_rows($r) > 0){
 
@@ -1390,17 +1157,8 @@ namespace F\mysql\table\select{
 //ini
 //=============
 namespace F\ini{
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
-
-    #todo: reduce if to change of only the used constant
-    if(version_compare(PHP_VERSION, '5.6.0', '>=')) {
-        function parseFile($path){ return parse_ini_file($path, true, INI_SCANNER_TYPED); }
-    }
-    else{
-        function parseFile($path){ return parse_ini_file($path, true); }
-    }
-
+    error_reporting(E_STRICT);
+    function parseFile($path){ return parse_ini_file($path, true, INI_SCANNER_TYPED); }
 }
 
 //=============
@@ -1477,8 +1235,7 @@ namespace F\image{
 //=============
 namespace F\pdf{
     #needs imagick
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
+    error_reporting(E_STRICT);
 
     function numberPages($pdfname) {
         $pdftext = file_get_contents($pdfname);
@@ -1489,8 +1246,7 @@ namespace F\pdf{
 }
 
 namespace F\pdf\thumbnail{
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
+    error_reporting(E_STRICT);
 
     function create($srcPath, $w, $h, $path){
         $img = new \Imagick($srcPath.'[0]');
@@ -1511,17 +1267,12 @@ namespace F\pdf\thumbnail{
 //hashing
 //Sha1 md5
 
-
-
 //=============
 //DOM
 //=============
 
-
-
 namespace F\dom{
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
+    error_reporting(E_STRICT);
 
     function getInnerHTML($node){
          $body = $node->ownerDocument->documentElement->firstChild->firstChild;
@@ -1560,8 +1311,7 @@ namespace F\dom{
 //=============
 
 namespace F\css{
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
+    error_reporting(E_STRICT);
 
     function attribute($prefixes, $name, $val){
         yield $name.": ".$val.";";
@@ -1608,15 +1358,12 @@ namespace F\css{
 
 }
 
-
-
 //=============
 //Sqlite3
 //=============
 
 namespace F\sqlite{
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
+    error_reporting(E_STRICT);
 
     use F\string as S;
 
@@ -1638,7 +1385,6 @@ namespace F\sqlite{
     }
 
 }
-
 
 //=======================================
 //Feed/OnePager/Microservice/RPC-Sever
@@ -1664,10 +1410,6 @@ namespace F\prog{
 
     //rename to json microservice?
     #todo: failcase -> one fails all fail or ignore defect json?
-
-    #a:
-    #goto a;
-
 
     #deprecate GET and change to post[json] only!
     #put jwt in header always!?
@@ -1730,4 +1472,3 @@ namespace F\prog{
     }
 
 }
-
