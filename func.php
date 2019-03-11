@@ -59,7 +59,7 @@ namespace F{
 
     function echoJSON($s){ echo toJSON($s); }
 
-    #todo: coroutine
+    #TODO: coroutine
     function execTime($f, $args){
         $t1 = microtime(true);
         $r = call_user_func_array($f, $args);
@@ -77,9 +77,9 @@ namespace F{
         return $obj;
     }
 
-    #todo: constructor args : list
+    #TODO: constructor args : list
     #non-Object types?
-    #todo: json-compatible
+    #TODO: json-compatible
     class SimpleSet{
         private $set;
         private $array; #for all the string keys.. that r not objs in php xD �.�
@@ -89,20 +89,20 @@ namespace F{
             $this->array = [];
         }
 
-        #todo: does not differentiate between 1 and "1"!
+        #TODO: does not differentiate between 1 and "1"!
         public function add($x){
-            #todo: make work with array!
+            #TODO: make work with array!
             if(gettype($x)==="string" || gettype($x)==="integer") $this->array[$x] = true;
             else $this->set->attach($x);
             return $this;
         }
         public function has($x){
-            #todo: make work with array!
+            #TODO: make work with array!
             if(gettype($x)==="string" || gettype($x)==="integer") return array_key_exists($x, $this->array);
             else return $this->set->contains($x);
         }
         public function delete($x){
-            #todo: make work with array!
+            #TODO: make work with array!
             if(gettype($x)==="string" || gettype($x)==="integer") unset($this->array[$x]);
             else $this->set->detach($x);
             return $this;
@@ -112,8 +112,8 @@ namespace F{
 
     function Set(){ return (new SimpleSet()); }
 
-    #todo: constructor args : dict
-    #todo: json-compatible
+    #TODO: constructor args : dict
+    #TODO: json-compatible
     class SimpleMap{
         private $map;
         private $array; #for all the string keys.. that r not objs in php xD �.�
@@ -143,7 +143,7 @@ namespace F{
         public function size(){ return count($this->array) + $this->map->count(); }
     }
 
-    #todo: func_args
+    #TODO: func_args
     function Map(){ return (new SimpleMap()); }
 
 }
@@ -229,7 +229,7 @@ namespace F\func{
         };
     }
 
-    #todo: make work!
+    #TODO: make work!
     function isGenFunc($f){
         try{
             #if($f instanceof Iterator){
@@ -545,7 +545,7 @@ namespace F\list_{
 
     #flatten array
 
-    //todo: make variadic
+    //TODO: make variadic
     function cartProd($ls, $xs){
         foreach($ls as $x){
             foreach($xs as $y){
@@ -748,7 +748,7 @@ namespace F\string{
 
     function charList($s){ return preg_split('//u', $s, null, PREG_SPLIT_NO_EMPTY); }
 
-    #todo: rewrite
+    #TODO: rewrite
     function fill($n, $s){
         $acc = "";
         for($i=0; $i<$n; $i++){
@@ -787,7 +787,7 @@ namespace F\string{
     #TODO create genericFunc that produces paires like lines & unlines
 
 
-    #todo: rewrite
+    #TODO: rewrite
     function unmask($s, $visibleLetters, $cover="_"){
         $retS = "";
         foreach(charList($s) as $c){
@@ -881,7 +881,7 @@ namespace F\io{
 
     function readUrl($url){ return file_get_contents($url); }
 
-    #error handling?
+    #TODO: error handling?
     function download($url, $path){
         $c = file_get_contents($url);
         file_put_contents($path, $c);
@@ -899,7 +899,7 @@ namespace F\io\file{
     function hasPerm($path){ return 0755 === (fileperms($path) & 0777); }
     function exists($p){ return file_exists($p); }
 
-    #rename to open?
+    #TODO: rename to open?
     function getFileHandle($path, $mode){
         $f = fopen($path, $mode);
         if($f) return $f;
@@ -970,7 +970,7 @@ namespace F\io\dir{
 
     function cwd(){ return getcwd(); }
 
-    //todo: gen
+    //TODO: gen
     function listAll($path){
 	    $ls = [];
 	    if($handle = opendir($path)){
@@ -1034,7 +1034,7 @@ namespace F\mysql{
 
     function query($con, $sql){ return mysqli_query($con, $sql); }
 
-    #todo: error handling
+    #TODO: error handling
     function connect($host, $user, $pwd, $db){
         $con = mysqli_connect($host, $user, $pwd, $db);
         if($con === false){
@@ -1100,7 +1100,7 @@ namespace F\mysql\table{
     function insert($con, $tableName, $dict){
         $fields = implode(',', D\keys($dict));
 
-        #todo: use toJSON?
+        #TODO: use toJSON?
         $values = substr(json_encode(D\values($dict)), 1, -1);
         return M\query($con, "INSERT INTO ".$tableName."(".$fields.") VALUES (".$values.")");
     }
@@ -1138,7 +1138,7 @@ namespace F\mysql\table\select{
     function select($con, $tableName, $joins, $fields, $condition){
         #JOIN film_actor ON (film.film_id = film_actor.film_id)
         # tname => "cond"
-        #todo: rewrite no foreach, S\concat
+        #TODO: rewrite no foreach, S\concat
         $s = "";
         foreach($joins as $tName => $cond){
             $s .= " JOIN ".$tName." ON (".$cond.") ";
@@ -1165,8 +1165,7 @@ namespace F\ini{
 //image
 //=============
 namespace F\image{
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
+    error_reporting(E_STRICT);
     #Supports: jpg png
     #sudo apt-get install php5-gd
     #sudo apt-get install php5-imagick
@@ -1401,15 +1400,14 @@ namespace F\sqlite{
 #ini ?
 
 namespace F\prog{
-    error_reporting(-1);
-    #error_reporting(E_STRICT);
+    error_reporting(E_STRICT);
     use F\dict as D;
 
     //onExit
     //register_shutdown_function
 
     //rename to json microservice?
-    #todo: failcase -> one fails all fail or ignore defect json?
+    #TODO: failcase -> one fails all fail or ignore defect json?
 
     #deprecate GET and change to post[json] only!
     #put jwt in header always!?
@@ -1457,7 +1455,6 @@ namespace F\prog{
         }
         ob_start();
         try{
-            #$r = call_user_func($f, $jsonV);
             $r = $f($jsonV);
         }
         catch(\Throwable $e){
