@@ -1,4 +1,10 @@
 {
-  "name": "TobiasWeiseX/func.php",
-  "description": "a simple functional lib for everyday php"
+    "name":         "TobiasWeiseX/func.php",
+    "description":  "a simple functional lib for everyday php",
+    "require":  {
+	    "php":  ">=7.0.0"
+    },
+    "autoload": {
+        "files": ["vendor/TobiasWeiseX/func.php/func.php"]
+    }
 }
