@@ -1025,6 +1025,49 @@ namespace F\io\path{
 
 }
 
+
+//=============
+//sqlite
+//=============
+
+namespace F\sqlite{
+
+
+    function withDB($path, $f){
+        $db = new SQLite3($path);
+        if(!$db){
+            throw new Exception($db->lastErrorMsg());
+        }
+        try{
+            $r = $f($db);
+            $db->close();
+            return $r;
+        }
+        catch(Exception $e){
+            $db->close();
+            throw $e;
+        }
+    }
+
+    function queryDB($db, $sql){
+        $ret = $db->query($sql);
+        if(!$ret){
+            $errStr = $db->lastErrorMsg();
+            throw new Exception($errStr." SQL-Query: ".$sql);
+        }
+        return $ret;
+    }
+
+    function fetchJSON($ret){
+        $rows = [];
+        while($row = $ret->fetchArray(SQLITE3_ASSOC)){
+            $rows[] = $row;
+        }
+        return $rows;
+    }
+
+
+}
 //=============
 //mysql
 //=============
