@@ -2,6 +2,8 @@
     "name":         "tobias_weise/func.php",
     "license": "MIT",
     "description":  "a simple functional lib for everyday php",
+    "version": "1.0.0",
+    "homepage": "https://github.com/TobiasWeiseX/func.php",
     "require":  {
 	    "php":  ">=7.0.0"
     },
