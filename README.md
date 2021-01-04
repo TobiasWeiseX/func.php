@@ -1,7 +1,7 @@
 
-**DEAD**
-
 # func.php
+
+license: BSD3
 
 A library trying to solve the problems facing a php-dev on a daily basis
 

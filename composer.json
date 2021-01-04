@@ -1,5 +1,6 @@
 {
     "name":         "tobias_weise/func.php",
+    "license": "BSD3",
     "description":  "a simple functional lib for everyday php",
     "require":  {
 	    "php":  ">=7.0.0"
