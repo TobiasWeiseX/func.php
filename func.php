@@ -3,8 +3,7 @@
 //				func.php
 //==========================================
 //@Author: Tobias Weise
-//@License: BSD3
-//https://opensource.org/licenses/BSD-3-Clause
+//@License: MIT
 //supports only php7+
 
 //the right way to force errors?
@@ -175,36 +174,10 @@ namespace F\number{
     function sub($a, $b){ return $a - $b; }
     function multi($a, $b){ return $a * $b; }
 
-
     function randInt($min, $max){ return rand($min, $max); }
-
-
-
 }
 
-//=============
-//Tuple
-//=============
-namespace F\tuple{
-    #http://hackage.haskell.org/package/base-4.8.1.0/docs/Data-Tuple.html
-    error_reporting(E_STRICT);
 
-    function fst($iterable){
-        list($a, $b) = $iterable;
-        return $a;
-    }
-
-    function snd($iterable){
-        list($a, $b) = $iterable;
-        return $b;
-    }
-
-    function swap($iterable){
-        list($a, $b) = $iterable;
-        return [$b, $a];
-    }
-
-}
 
 //=============
 //Function
@@ -243,6 +216,7 @@ namespace F\func{
         #return $f instanceof Generator;
     }
 
+    #Todo: make variadic
     function compose(&$f, &$g){
         return function(...$args) use($f,$g){
             return $f($g(...$args));
@@ -758,7 +732,6 @@ namespace F\string{
     }
 
     function hasSubstr($s, $ss){ return strpos($s, $ss) !== false; }
-    function letters($s){ return L\noDoubles(charList($s)); }
 
     #alternative haskell name? intersperse?
     function sepBy($del, $s){ return implode($del, charList($s)); }
@@ -786,33 +759,9 @@ namespace F\string{
 
     #TODO create genericFunc that produces paires like lines & unlines
 
-
-    #TODO: rewrite
-    function unmask($s, $visibleLetters, $cover="_"){
-        $retS = "";
-        foreach(charList($s) as $c){
-            #$retS .= L\hasElem($visibleLetters, $c) ? $c : $cover;
-            $retS .= L\elem($c, $visibleLetters) ? $c : $cover;
-        }
-        return $retS;
-    }
-
     #Text
     function lines($s){ return explode("\n", $s); }
     function unlines($lines){ return join_("\n", $lines); }
-    function tab($lines){
-        foreach($lines as $line){
-            yield "\t".$line;
-        }
-    }
-
-    #quotation
-    function isQuoted($s){
-        if($s[0]==='"' && $s[length($s)-1]==='"') return true;
-        if($s[0]==="'" && $s[length($s)-1]==="'") return true;
-        return false;
-    }
-    function unquote($s){ return slice(1, length($s)-2, $s); }
 
 
     function replicateStr($n, $s){
@@ -1026,175 +975,9 @@ namespace F\io\path{
 }
 
 
-//=============
-//sqlite
-//=============
-
-namespace F\sqlite{
-
-
-    function withDB($path, $f){
-        $db = new SQLite3($path);
-        if(!$db){
-            throw new Exception($db->lastErrorMsg());
-        }
-        try{
-            $r = $f($db);
-            $db->close();
-            return $r;
-        }
-        catch(Exception $e){
-            $db->close();
-            throw $e;
-        }
-    }
-
-    function queryDB($db, $sql){
-        $ret = $db->query($sql);
-        if(!$ret){
-            $errStr = $db->lastErrorMsg();
-            throw new Exception($errStr." SQL-Query: ".$sql);
-        }
-        return $ret;
-    }
-
-    function fetchJSON($ret){
-        $rows = [];
-        while($row = $ret->fetchArray(SQLITE3_ASSOC)){
-            $rows[] = $row;
-        }
-        return $rows;
-    }
-
-
-}
-//=============
-//mysql
-//=============
-#TODO: only use standard sql? rename to sql?
-namespace F\mysql{
-    error_reporting(E_STRICT);
-
-    function query($con, $sql){ return mysqli_query($con, $sql); }
-
-    #TODO: error handling
-    function connect($host, $user, $pwd, $db){
-        $con = mysqli_connect($host, $user, $pwd, $db);
-        if($con === false){
-            #die("Connection failed: " . mysqli_connect_error());
-            throw new \Exception("Connection failed: " . mysqli_connect_error());
-        }
-        else return $con;
-    }
-
-}
-
-namespace F\mysql\types{
-    error_reporting(E_STRICT);
-    define(__NAMESPACE__."\\Integer","INTEGER");
-}
-
-namespace F\mysql\table{
-    error_reporting(E_STRICT);
-
-    use F\mysql as M;
-    use F\list_ as L;
-    use F\dict as D;
-    use F\string as S;
-
-
-    function create($dbH, $name, $fields, $uniques, $primarykeys){
-        foreach($uniques as $v){
-            if(!D\isKey($v, $fields)){
-                die("MYSQL-error: '".$v."' is not a valid field name!");
-            }
-        }
-        $s = "CREATE TABLE IF NOT EXISTS ".$name." (
-                    ".S\join_(", ", D\zipAssoc(function($a,$b){return $a." ".$b;}, $fields)).",
-                    PRIMARY KEY (".S\join_(",",$primarykeys)."),
-                    UNIQUE(".S\join_(",",$uniques).")
-                );";
-        $result = M\query($dbH, $s);
-        if(!is_bool($result)){
-            echo mysqli_errno($result) . ": " . mysql_error($result). "\n";
-        }
-    }
-
-
-    function createSimple($dbH, $name, $fields, $uniques){
-        foreach($uniques as $v){
-            if(!D\isKey($v, $fields)){
-                die("MYSQL-error: '".$v."' is not a valid field name!");
-            }
-        }
-        $s = "CREATE TABLE IF NOT EXISTS ".$name." (
-                    id int(6) NOT NULL auto_increment,
-                    ".join_(", ", D\zipAssoc(function($a,$b){return $a." ".$b;}, $fields)).",
-                    PRIMARY KEY (id),
-                    UNIQUE(".join_(",",$uniques).")
-                );";
-        $result = M\query($dbH, $s);
-        if(!is_bool($result)){
-            echo mysql_errno($result).": ".mysql_error($result)."\n";
-        }
-    }
-
-
-    function insert($con, $tableName, $dict){
-        $fields = implode(',', D\keys($dict));
-
-        #TODO: use toJSON?
-        $values = substr(json_encode(D\values($dict)), 1, -1);
-        return M\query($con, "INSERT INTO ".$tableName."(".$fields.") VALUES (".$values.")");
-    }
-
-    function drop($con, $name){ return M\query($con, "DROP TABLE ".$name.";"); }
 
 
 
-    #function isVarchar($n){
-    #    if($n > 767){
-    #        #die("varchar limit is 767!");
-    #        return false;
-    #    }
-    #    #return "varchar(".$n.")";
-    #    return true;
-    #}
-
-}
-
-namespace F\mysql\table\select{
-    error_reporting(E_STRICT);
-
-    //if(mysqli_num_rows($r) > 0){
-
-    function single($con, $tableName, $fields=["*"], $cond="true"){
-        $r = mysqli_query($con, "SELECT ".implode(",", $fields)." FROM ".$tableName." WHERE ".$cond." ;");
-        if(!is_bool($r)){
-            while($row = mysqli_fetch_assoc($r)){
-                yield $row;
-            }
-        }
-    }
-
-    #todo: 1 array for all the join rules instead of tableName+joins
-    function select($con, $tableName, $joins, $fields, $condition){
-        #JOIN film_actor ON (film.film_id = film_actor.film_id)
-        # tname => "cond"
-        #TODO: rewrite no foreach, S\concat
-        $s = "";
-        foreach($joins as $tName => $cond){
-            $s .= " JOIN ".$tName." ON (".$cond.") ";
-        }
-        $r = mysqli_query($con, "SELECT ".implode(",", $fields)." ".$s." FROM ".$tableName." WHERE ".$condition." ;");
-        if(!is_bool($r)){
-            while($row = mysqli_fetch_assoc($r)){
-                yield $row;
-            }
-        }
-    }
-
-}
 
 //=============
 //ini
@@ -1202,107 +985,6 @@ namespace F\mysql\table\select{
 namespace F\ini{
     error_reporting(E_STRICT);
     function parseFile($path){ return parse_ini_file($path, true, INI_SCANNER_TYPED); }
-}
-
-//=============
-//image
-//=============
-namespace F\image{
-    error_reporting(E_STRICT);
-    #Supports: jpg png
-    #sudo apt-get install php5-gd
-    #sudo apt-get install php5-imagick
-
-    use F\list_ as L;
-
-    function resizeImage($path, $new_path, $width, $height){
-	    #$ext = path_to_ext($path);
-        $ext = strtolower(L\last(explode(".", $path)));
-        $filename = $path;
-        list($width_orig, $height_orig) = getimagesize($filename);
-        $ratio_orig = $width_orig / $height_orig;
-        if($width / $height > $ratio_orig) $width = $height * $ratio_orig;
-        else $height = $width / $ratio_orig;
-        $image_p = imagecreatetruecolor($width, $height);
-	    switch($ext){
-		    case "jpg":
-		    case "jpeg":
-			    $image = imagecreatefromjpeg($filename);
-			    break;
-		    case "png":
-			    $image = imagecreatefrompng($filename);
-			    break;
-		    case "gif":
-			    $image = imagecreatefromgif($filename);
-			    break;
-
-		    case "bmp":
-			    $image = imagecreatefromwbmp($filename);
-			    break;
-
-	    }
-        imagecopyresampled($image_p, $image, 0, 0, 0, 0, $width, $height, $width_orig, $height_orig);
-	    switch($ext){
-		    case "jpg":
-		    case "jpeg":
-			    imagejpeg($image_p, $new_path, 100);
-			    break;
-		    case "png":
-			    imagepng($image_p, $new_path);
-			    break;
-		    case "gif":
-			    imagegif($image_p, $new_path);
-			    break;
-		    case "bmp":
-                imagewbmp($image_p, $new_path);
-			    break;
-	    }
-        imagedestroy($image);
-        imagedestroy($image_p);
-    }
-
-
-    function resizeByHeight($path, $new_path, $height){
-        $ext = strtolower(L\last(explode(".", $path)));
-        $filename = $path;
-        list($width_orig, $height_orig) = getimagesize($filename);
-	    $width = ($height/$height_orig) * $width_orig;
-        resizeImage($path, $new_path, $width, $height);
-    }
-
-}
-
-//=============
-//pdf
-//=============
-namespace F\pdf{
-    #needs imagick
-    error_reporting(E_STRICT);
-
-    function numberPages($pdfname) {
-        $pdftext = file_get_contents($pdfname);
-        $num = preg_match_all("/\/Page\W/", $pdftext, $dummy);
-        return $num;
-    }
-
-}
-
-namespace F\pdf\thumbnail{
-    error_reporting(E_STRICT);
-
-    function create($srcPath, $w, $h, $path){
-        $img = new \Imagick($srcPath.'[0]');
-        $img->setImageFormat('jpg');
-        $img->thumbnailImage($w, $h, true, true);
-        file_put_contents($path, $img);
-    }
-
-    function createByHeight($srcPath, $h, $targetPath){
-        $ratio = 210.0/297.0;
-        $w = $ratio * $h;
-        create($srcPath, $w, $h, $targetPath);
-    }
-
 }
 
 
@@ -1348,167 +1030,6 @@ namespace F\dom{
 }
 
 
-//=============
-//CSS
-//=============
 
-namespace F\css{
-    error_reporting(E_STRICT);
 
-    function attribute($prefixes, $name, $val){
-        yield $name.": ".$val.";";
-        foreach($prefixes as $pfx){
-            yield "-".$pfx."-".$name.": ".$val.";";
-        }
-    }
 
-    #cssClass as dict
-
-    function cssClass($name, $d, $protoClass=[]){
-        $attrs = [];
-        foreach($protoClass as $protoName => $protoAttrs){
-            $attrs = $protoAttrs;
-        }
-        foreach($d as $k => $v){
-            $attrs[$k] = $v;
-        }
-        return [$name => $attrs];
-    }
-
-    function showCssClass($cls){
-        $name = "";
-        $vals = [];
-        foreach($cls as $k => $v){
-            $name = $k;
-            $vals = $v;
-        }
-        $ls = [];
-        foreach($vals as $k => $v){
-            $ls[] = $k.": ".$v.";";
-        }
-        return ".".$name."{".implode("\n",$ls)."}";
-    }
-
-    /*$wrapper = cssClass("wrapper", [
-        "width" => "100%",
-        "height" => "100%",
-        "display" => "grid",
-        "grid-template-columns" => "repeat(2, 1fr)",
-        "grid-gap" => "0px",
-        "grid-auto-rows" => "minmax(100px, auto)"
-    ]);*/
-
-}
-
-//=============
-//Sqlite3
-//=============
-
-namespace F\sqlite{
-    error_reporting(E_STRICT);
-
-    use F\string as S;
-
-    function js2sql($x){
-        switch(gettype($x)){
-            case "integer": return "".$x;
-            case "double": return "".$x;
-            case "string": return "'".S\replace("'", "\\'", $x)."'";
-            #case "string": return "'".S\replace("'", "'", $x)."'";
-        }
-    }
-
-    function createTable($db, $name, $obj){
-        $ls = [];
-        foreach($obj as $k => $v){
-            $ls[] = $k." ".$v;
-        }
-        return $db->query("CREATE TABLE IF NOT EXISTS ".$name." (".S\join_(",", $ls).")");
-    }
-
-}
-
-//=======================================
-//Feed/OnePager/Microservice/RPC-Sever
-//=======================================
-
-//for specialized pages to set up
-
-//todo:
-//templating skeletons for different formats?
-
-#fileProduction:
-#xml: rss, svg
-#css
-#ini ?
-
-namespace F\prog{
-    error_reporting(E_STRICT);
-    use F\dict as D;
-
-    //onExit
-    //register_shutdown_function
-
-    //rename to json microservice?
-    #TODO: failcase -> one fails all fail or ignore defect json?
-
-    #deprecate GET and change to post[json] only!
-    #put jwt in header always!?
-
-    #$log = function($s){
-    #    \F\io\file\appendLn("err.log", $s);
-    #};
-
-    function exception2obj($e){
-        return ["error" => [
-            "code" => $e->getCode(),
-            "message" => $e->getMessage(),
-            "line" => $e->getLine(),
-            "file" => $e->getFile(),
-            "trace" => $e->getTraceAsString()
-        ]];
-    }
-
-    function microService($f, $log=null, $catchAll=true){
-        ini_set('display_errors', 1);
-        if(is_null($log)) $log = function($s){};
-
-        if($catchAll){
-            set_error_handler(function($errno, $errstr, $errfile, $errline, $errcontext ) use (&$log){
-                if($errno === E_USER_WARNING || $errno === E_USER_NOTICE){
-                    $log($errstr);
-                }
-                else{
-                    throw new \ErrorException($errstr, $errno, 0, $errfile, $errline);
-                }
-            });
-        }
-
-        if(!empty($_POST) && isset($_POST["json"])){
-            try{
-                $jsonV = \F\fromJSON($_POST["json"]);
-            }
-            catch(\Throwable $e){
-                $log($e->toString());
-                $jsonV = [];
-            }
-        }
-        else{
-            $jsonV = [];
-        }
-        ob_start();
-        try{
-            $r = $f($jsonV);
-        }
-        catch(\Throwable $e){
-            $log(''.$e);
-            $r = exception2obj($e);
-        }
-        ob_end_clean();
-        header('Content-Type: application/json');
-        header('Access-Control-Allow-Origin: *');
-        echo utf8_encode(\F\toJSON($r));
-        exit(0);
-    }
-
-}
